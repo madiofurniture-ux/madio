@@ -7,6 +7,7 @@ import { AppRoutes } from "./AppRoutes";
 import { headCollector, type PageHead } from "./lib/seo";
 import { furnitureCategories, getProductsByCategory } from "./data/furniture";
 import { dwCategories, getCategoryPhotos } from "./data/doorsWindows";
+import { dwProjects } from "./data/dwArchitect";
 
 export interface RenderResult {
   html: string;
@@ -32,6 +33,11 @@ export function getRoutes(): string[] {
     "/",
     "/contact",
     "/doors-windows",
+    "/doors-windows/systems",
+    "/doors-windows/design-materials",
+    "/doors-windows/architects",
+    "/doors-windows/resources",
+    "/doors-windows/consultation",
     "/map",
     "/map/about",
     "/map/products",
@@ -46,6 +52,9 @@ export function getRoutes(): string[] {
     routes.add(`/furniture/${cat.id}`);
     for (const p of products) routes.add(`/furniture/${cat.id}/${p.id}`);
   }
+
+  // Projects joins search once real case studies exist (noindex until then).
+  if (dwProjects.some((p) => !p.isInspiration)) routes.add("/doors-windows/projects");
 
   for (const cat of dwCategories) {
     if (!cat.isPopulated && getCategoryPhotos(cat.id).length === 0) continue;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import madioLogo from "../assets/madio-logo.png";
+import { dwNavLinks } from "../data/dwNav";
 
 export const MadioHeader: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,6 +38,13 @@ export const MadioHeader: React.FC = () => {
     { path: "/contact?source=map",  label: "Contact" },
   ];
 
+  // Sub-pages per vertical, shown as a hover dropdown on desktop and as
+  // indented links in the mobile menu.
+  const subLinksFor: Record<string, { path: string; label: string }[]> = {
+    "/map": mapSubLinks,
+    "/doors-windows": dwNavLinks.filter((l) => !l.end),
+  };
+
   const navLinkClass = ({ isActive }: { isActive: boolean }) => {
     const base =
       "text-[11px] font-sans tracking-[0.15em] uppercase font-light transition-all duration-300 relative pb-1 whitespace-nowrap " +
@@ -70,19 +78,19 @@ export const MadioHeader: React.FC = () => {
           {/* Desktop nav — standard way to choose vertical on every page */}
           <nav className="hidden md:flex items-center gap-x-6 lg:gap-x-10 flex-1 justify-center">
             {navLinks.map((link) =>
-              link.path === "/map" ? (
+              subLinksFor[link.path] ? (
                 <div key={link.path} className="relative group py-2 -my-2">
                   <NavLink to={link.path} end className={navLinkClass}>
                     {link.label}
                   </NavLink>
                   <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <div className="bg-[#F4F1EA] border border-[#EBE8E2] shadow-lg py-2 min-w-[180px]">
-                      {mapSubLinks.map((sub) => (
+                      {subLinksFor[link.path].map((sub) => (
                         <NavLink
                           key={sub.path}
                           to={sub.path}
                           className={({ isActive }) =>
-                            `block px-5 py-2.5 text-[11px] font-sans tracking-[0.1em] uppercase font-light transition-colors duration-200 ${
+                            `block px-5 py-2.5 whitespace-nowrap text-[11px] font-sans tracking-[0.1em] uppercase font-light transition-colors duration-200 ${
                               isActive ? "text-[#C5A059]" : "text-[#121212] hover:text-[#C5A059] hover:bg-[#F4F1EA]"
                             }`
                           }
@@ -156,9 +164,9 @@ export const MadioHeader: React.FC = () => {
               >
                 {link.label}
               </NavLink>
-              {link.path === "/map" && (
+              {subLinksFor[link.path] && (
                 <div className="mt-4 ml-4 flex flex-col space-y-3">
-                  {mapSubLinks.map((sub) => (
+                  {subLinksFor[link.path].map((sub) => (
                     <NavLink
                       key={sub.path}
                       to={sub.path}
@@ -239,6 +247,26 @@ export const MadioHeader: React.FC = () => {
             </span>
             <nav className="flex flex-col space-y-4">
               {mapSubLinks.map((sub) => (
+                <NavLink
+                  key={sub.path}
+                  to={sub.path}
+                  className={({ isActive }) =>
+                    `text-base font-serif tracking-wide font-light transition-all duration-300 ${
+                      isActive ? "text-[#C5A059] pl-4 border-l-2 border-[#C5A059]" : "text-[#121212] hover:text-[#C5A059]"
+                    }`
+                  }
+                >
+                  {sub.label}
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* Madio Doors & Windows — deep links into the division */}
+            <span className="text-[10px] tracking-[0.25em] uppercase text-[#C5A059] font-sans font-semibold block mt-10 mb-6">
+              Doors &amp; Windows
+            </span>
+            <nav className="flex flex-col space-y-4">
+              {dwNavLinks.filter((l) => !l.end).map((sub) => (
                 <NavLink
                   key={sub.path}
                   to={sub.path}

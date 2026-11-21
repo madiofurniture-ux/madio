@@ -653,7 +653,7 @@ export const AdminUpload: React.FC = () => {
             uploader away from what an admin is working on. Only ever
             offered for admin-created (dynamic) categories: the dropdown
             below is populated exclusively from deletableCategories, and
-            static ones (Beds, Wall Art, HL Vista Slim, ...) are simply never
+            static ones (Beds, Wall Art, Vista 32, ...) are simply never
             in that list, so there's no way to select one here at all. */}
         {!showDeleteCategoryPanel ? (
           <button

@@ -3,7 +3,7 @@
 // access to commit new entries directly into shared/furnitureCategories.ts /
 // shared/doorsWindowsCategories.ts, so those two files stay the STATIC
 // baseline (the categories with real PDF-sourced catalogue data — beds,
-// wall-art, HL Vista Slim, etc.), and everything an admin adds afterward is
+// wall-art, Vista 32, etc.), and everything an admin adds afterward is
 // stored as a small JSON file in Cloudinary itself (a `raw` resource, not an
 // image), fetched at build time (see scripts/generate-image-data.ts) and
 // merged into the category lists the frontend renders. A dynamically-added
