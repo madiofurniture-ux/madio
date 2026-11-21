@@ -15,6 +15,12 @@ const FurnitureCategoryPage = page(() => import("./pages/FurnitureCategoryPage")
 const FurnitureProductDetail = page(() => import("./pages/FurnitureProductDetail"), "FurnitureProductDetail");
 const DoorsWindows = page(() => import("./pages/DoorsWindows"), "DoorsWindows");
 const DoorsWindowsDetail = page(() => import("./pages/DoorsWindowsDetail"), "DoorsWindowsDetail");
+const DWSystems = page(() => import("./pages/DWSystems"), "DWSystems");
+const DWDesignMaterials = page(() => import("./pages/DWDesignMaterials"), "DWDesignMaterials");
+const DWArchitects = page(() => import("./pages/DWArchitects"), "DWArchitects");
+const DWResources = page(() => import("./pages/DWResources"), "DWResources");
+const DWProjects = page(() => import("./pages/DWProjects"), "DWProjects");
+const DWConsultation = page(() => import("./pages/DWConsultation"), "DWConsultation");
 const Home = page(() => import("./pages/Home"), "Home");
 const About = page(() => import("./pages/About"), "About");
 const Products = page(() => import("./pages/Products"), "Products");
@@ -49,6 +55,13 @@ export const AppRoutes: React.FC = () => (
         {/* Doors & Windows vertical routes */}
         <Route path="doors-windows">
           <Route index element={<DoorsWindows />} />
+          {/* Static division pages rank above the :category catch-all. */}
+          <Route path="systems" element={<DWSystems />} />
+          <Route path="design-materials" element={<DWDesignMaterials />} />
+          <Route path="architects" element={<DWArchitects />} />
+          <Route path="resources" element={<DWResources />} />
+          <Route path="projects" element={<DWProjects />} />
+          <Route path="consultation" element={<DWConsultation />} />
           <Route path=":category" element={<DoorsWindowsDetail />} />
         </Route>
 

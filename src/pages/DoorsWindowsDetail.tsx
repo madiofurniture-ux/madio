@@ -10,6 +10,10 @@ import {
 } from "../data/doorsWindows";
 import type { DWCategoryPhoto, DWSystemSpec } from "../data/doorsWindows";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { absoluteUrl, breadcrumbJsonLd } from "../lib/seo";
+import { madioProcess } from "../data/doorsWindows";
+import { DW_BASE, dwApplicationGroups, hasPublicPage, resourcesForSystem, dwResources } from "../data/dwArchitect";
+import { ConsultBand } from "../components/dw/DWUI";
 import { responsiveImg } from "../lib/image";
 
 const DW_ACCENT = "#C5A059";
@@ -40,10 +44,11 @@ const FLAT_SPEC_LABELS: Partial<Record<keyof DWSystemSpec, string>> = {
 // photos — while the rest (confirmed note, enquire CTA) stays, since full
 // specs still aren't confirmed even once reference photos exist.
 const ComingSoonState: React.FC<{
+  categoryId: string;
   confirmedNote?: string;
   panelConfigs?: string[];
   photos?: DWCategoryPhoto[];
-}> = ({ confirmedNote, panelConfigs, photos = [] }) => (
+}> = ({ categoryId, confirmedNote, panelConfigs, photos = [] }) => (
   <div className="py-24 text-center max-w-xl mx-auto">
     {photos.length > 0 && (
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-14 text-left">
@@ -89,7 +94,7 @@ const ComingSoonState: React.FC<{
         : "Full specifications are being finalised with the client. Enquire below and we'll get in touch once they're available."}
     </p>
     <Link
-      to="/contact?source=doors-windows"
+      to={`${DW_BASE}/consultation?system=${categoryId}`}
       className="inline-flex items-center space-x-2 px-8 py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium text-white transition-opacity hover:opacity-90"
       style={{ backgroundColor: DW_ACCENT }}
     >
@@ -107,8 +112,46 @@ export const DoorsWindowsDetail: React.FC = () => {
   const isAvailable = !!meta?.isPopulated || clientPhotos.length > 0;
 
   usePageMeta(
-    meta ? `${meta.name} | Madio Doors and Windows` : "Madio Doors and Windows",
-    meta?.description ?? "Custom-engineered architectural aluminium fenestration systems from Madio Doors and Windows."
+    meta ? `${meta.name} | Aluminium ${system?.specs.trackWidth ? "Sliding System" : "System"} | Madio Doors & Windows` : "Madio Doors & Windows",
+    system
+      ? `${system.name}: ${system.tagline} ${[system.specs.maxHeight && `Up to ${system.specs.maxHeight} high`, system.specs.glassThickness && `${system.specs.glassThickness} glass`, system.specs.windLoad && `${system.specs.windLoad} wind load`].filter(Boolean).join(", ")}.`
+      : meta?.description ?? "Architectural aluminium systems from Madio Doors & Windows.",
+    meta
+      ? {
+          image: system?.images[0],
+          jsonLd: [
+            breadcrumbJsonLd([
+              { name: "Doors & Windows", path: DW_BASE },
+              { name: "Architectural Systems", path: `${DW_BASE}/systems` },
+              { name: meta.name, path: `${DW_BASE}/${meta.id}` },
+            ]),
+            ...(system
+              ? [
+                  {
+                    "@context": "https://schema.org",
+                    "@type": "Product",
+                    name: system.name,
+                    description: system.description,
+                    category: "Aluminium doors and windows",
+                    brand: { "@type": "Brand", name: "Madio Doors & Windows" },
+                    url: absoluteUrl(`${DW_BASE}/${system.id}`),
+                    ...(system.images[0] ? { image: system.images[0] } : {}),
+                    additionalProperty: Object.entries({
+                      "Glass thickness": system.specs.glassThickness,
+                      "Maximum height": system.specs.maxHeight,
+                      "Maximum width": system.specs.maxWidth,
+                      "Load capacity": system.specs.loadCapacity,
+                      "Wind load": system.specs.windLoad,
+                      Interlock: system.specs.interlock,
+                    })
+                      .filter(([, v]) => !!v)
+                      .map(([name, value]) => ({ "@type": "PropertyValue", name, value })),
+                  },
+                ]
+              : []),
+          ],
+        }
+      : { noindex: true },
   );
 
   // Unknown slug → redirect to landing
@@ -144,7 +187,7 @@ export const DoorsWindowsDetail: React.FC = () => {
         />
         <div className="relative z-10 max-w-7xl mx-auto">
           <Link
-            to="/doors-windows"
+            to={`${DW_BASE}/systems`}
             className="inline-flex items-center space-x-2 text-xs uppercase tracking-[0.2em] font-sans text-[#6B6B6B] hover:text-[#121212] transition-colors mb-10"
           >
             <ArrowLeft size={13} />
@@ -168,6 +211,7 @@ export const DoorsWindowsDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-16">
         {!meta.isPopulated || !system ? (
           <ComingSoonState
+            categoryId={meta.id}
             confirmedNote={meta.confirmedNote}
             panelConfigs={meta.panelConfigs}
             photos={clientPhotos}
@@ -231,7 +275,7 @@ export const DoorsWindowsDetail: React.FC = () => {
               {hasValue(system.bestFor) && (
                 <div className="border-t border-[#EBE8E2] pt-6">
                   <h2 className="text-xs uppercase tracking-[0.2em] font-sans font-medium text-[#121212] mb-3">
-                    Best For
+                    Architectural Application
                   </h2>
                   <p className="text-sm text-[#6B6B6B] font-light leading-relaxed">{system.bestFor}</p>
                 </div>
@@ -317,17 +361,14 @@ export const DoorsWindowsDetail: React.FC = () => {
               {/* CTA */}
               <div className="border-t border-[#EBE8E2] pt-8 space-y-4">
                 <Link
-                  to={`/contact?source=doors-windows&system=${system.id}`}
-                  className="flex items-center justify-center space-x-2 w-full py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium text-white transition-all duration-300"
-                  style={{ backgroundColor: DW_ACCENT }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#3a5233")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = DW_ACCENT)}
+                  to={`${DW_BASE}/consultation?system=${system.id}`}
+                  className="flex items-center justify-center space-x-2 w-full py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium text-white bg-[#C5A059] hover:bg-[#121212] transition-all duration-300"
                 >
-                  <span>Request a Quote</span>
+                  <span>Discuss This System</span>
                   <ArrowRight size={13} />
                 </Link>
                 <Link
-                  to="/doors-windows"
+                  to={`${DW_BASE}/systems`}
                   className="flex items-center justify-center space-x-2 w-full py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium border border-[#EBE8E2] text-[#6B6B6B] hover:border-[#121212] hover:text-[#121212] transition-all duration-300"
                 >
                   <ArrowLeft size={13} />
@@ -339,15 +380,99 @@ export const DoorsWindowsDetail: React.FC = () => {
         )}
       </div>
 
+      {/* ── Options, installation and documentation (populated systems) ── */}
+      {meta.isPopulated && system && (
+        <section className="border-t border-[#EBE8E2] bg-white py-16 px-6 md:px-12">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-[#EBE8E2] border border-[#EBE8E2]">
+            {[
+              {
+                title: "Glass",
+                lines: [
+                  system.specs.glassThickness && `${system.specs.glassThickness} glass thickness`,
+                  "Single, DGU or laminated glazing",
+                ],
+              },
+              {
+                title: "Hardware",
+                lines: ["Imported European hardware", system.specs.lockingSystem && `Locking: ${system.specs.lockingSystem}`],
+              },
+              {
+                title: "Finishes",
+                lines: ["Any RAL powder coat (QUALICOAT)", "Anodised and wood-grain finishes"],
+              },
+              {
+                title: hasTrack ? "Configurations & mesh" : "Configurations",
+                lines: [
+                  hasTrack ? "2-track and 3-track sliding" : "Openable casement",
+                  "Fixed and combination units",
+                  system.specs.netOption && `Insect mesh: ${system.specs.netOption}`,
+                ],
+              },
+            ].map((block) => (
+              <div key={block.title} className="bg-white p-6">
+                <h2 className="text-xs uppercase tracking-[0.2em] font-sans font-medium text-[#121212] mb-4">{block.title}</h2>
+                <ul className="space-y-2">
+                  {block.lines.filter(Boolean).map((l) => (
+                    <li key={l as string} className="text-xs text-[#6B6B6B] font-light leading-relaxed">{l}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 mt-14">
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.2em] font-sans font-medium text-[#121212] mb-4">Installation considerations</h2>
+              <ul className="space-y-2">
+                {[
+                  "Final opening sizes are confirmed by Madio's site measurement before production.",
+                  ...(madioProcess.find((p) => p.step === 3)?.bullets.slice(1, 4) ?? []),
+                ].map((b) => (
+                  <li key={b} className="text-xs text-[#6B6B6B] font-light leading-relaxed flex items-start">
+                    <span className="mt-1.5 mr-2.5 w-1 h-1 rounded-full shrink-0 bg-[#C5A059]" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.2em] font-sans font-medium text-[#121212] mb-4">Technical documentation</h2>
+              <ul className="border-t border-[#EBE8E2]">
+                {[dwResources[0], ...resourcesForSystem(system.id)].map((r) => (
+                  <li key={r.id} className="border-b border-[#EBE8E2] py-3 flex items-center justify-between gap-4 text-xs">
+                    <span className="text-[#121212]">{r.title}</span>
+                    {r.file ? (
+                      <a href={r.file} download className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059]">Download</a>
+                    ) : (
+                      <Link
+                        to={`${DW_BASE}/consultation?system=${system.id}&resource=${encodeURIComponent(r.title)}`}
+                        className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] whitespace-nowrap"
+                      >
+                        Request
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Related systems strip ── */}
       <section className="border-t border-[#EBE8E2] bg-[#F4F1EA]/40 py-16 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-xs uppercase tracking-[0.2em] font-sans font-medium text-[#121212] mb-8">
-            Other Systems
+            Related Systems
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {dwCategories
-              .filter((c) => c.id !== category)
+            {[
+              ...dwCategories.filter(
+                (c) => c.id !== category && dwApplicationGroups.some((g) => g.systemIds.includes(category) && g.systemIds.includes(c.id)),
+              ),
+              ...dwCategories.filter((c) => c.id !== category),
+            ]
+              .filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i && hasPublicPage(c.id))
               .slice(0, 3)
               .map((c) => (
                 <Link
@@ -368,6 +493,7 @@ export const DoorsWindowsDetail: React.FC = () => {
         </div>
       </section>
 
+      <ConsultBand system={meta.id} />
     </div>
   );
 };

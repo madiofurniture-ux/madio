@@ -471,46 +471,6 @@ export const dwPerformanceHighlights = [
   },
 ];
 
-// The four product families named in the brand brief. Each links to the
-// catalogue entries that belong to it. Families whose systems have no
-// confirmed specs or photos yet say so instead of inventing detail.
-export const dwProductFamilies: {
-  title: string;
-  body: string;
-  systemIds: DWCategoryId[];
-}[] = [
-  {
-    title: "Slim Sliding Systems",
-    body: "Large-format sliding doors and windows with slim sightlines, in 2-track and 3-track configurations.",
-    systemIds: ["hl-vista-slim", "hl-ultra-slim", "hl-elite-gulf-slim", "hl-retro-gulf-slim", "hl-eco-gulf-slim"],
-  },
-  {
-    title: "Casement Doors & Windows",
-    body: "Wide-swinging openable systems with continuous weather gaskets and single or multi-point locking.",
-    systemIds: ["hl-50-casement-door", "casement-windows-openable"],
-  },
-  {
-    title: "Glass Partitions",
-    body: "Glass partition and door systems in 12 mm glass for open-plan residential and commercial interiors.",
-    systemIds: ["glass-partitions-doors"],
-  },
-  {
-    title: "Motorised Integrated Blinds",
-    body: "Motorised blinds integrated into the window system. Specifications are shared on request.",
-    systemIds: ["motorised-integrated-blinds"],
-  },
-];
-
-// Project gallery — curated, retouched site photography only. Empty until the
-// client supplies the finished images; the section is hidden while empty.
-// Raw site shots (debris, stickers, reflections) must not be added here.
-export interface DWGalleryItem {
-  src: string;
-  caption: string;
-  systemId?: DWCategoryId;
-}
-export const dwProjectGallery: DWGalleryItem[] = [];
-
 // --------------- Helpers ---------------
 
 export const getCategoryMeta = (id: string): DWCategoryMeta | undefined =>
