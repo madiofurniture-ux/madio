@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Download, FileText } from "lucide-react";
-import { dwSystems, getCategoryMeta } from "../data/doorsWindows";
+import { dwOpeningSystems, dwSystems, getCategoryMeta } from "../data/doorsWindows";
 import { DW_BASE, dwResources } from "../data/dwArchitect";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { breadcrumbJsonLd } from "../lib/seo";
@@ -54,7 +54,7 @@ export const DWResources: React.FC = () => {
                     <p className="text-xs text-[#6B6B6B] font-light leading-relaxed">{r.description}</p>
                     {systems.length > 0 && (
                       <p className="mt-2 text-[10px] uppercase tracking-[0.12em] font-sans text-[#121212]/60">
-                        {systems.length === dwSystems.length ? "All HL systems" : systems.join(" · ")}
+                        {systems.length === dwOpeningSystems.length ? "All window and door systems" : systems.join(" · ")}
                       </p>
                     )}
                   </div>
@@ -88,7 +88,7 @@ export const DWResources: React.FC = () => {
           <SectionHeading
             eyebrow="System data sheets"
             title="Specification online, per system."
-            intro="Each system page carries its catalogue specification: track and frame dimensions, glass range, maximum sizes, load, wind load and locking."
+            intro="Each system page carries its 2026 catalogue specification: frame and track dimensions, interlock, glass range, maximum sizes, roller capacity and locking, or glass, profile and finish for partitions."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {dwSystems.map((s) => (

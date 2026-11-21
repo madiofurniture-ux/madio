@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import {
   dwCategories,
   dwSystems,
@@ -10,6 +10,8 @@ import {
   dwPillars,
   dwPerformanceHighlights,
   dwMinInterlock,
+  dwMaxHeight,
+  dwAsset,
   DW_WARRANTY,
 } from "../data/doorsWindows";
 import type { DWCategoryMeta } from "../data/doorsWindows";
@@ -27,11 +29,12 @@ import { ConsultBand, DataTable } from "../components/dw/DWUI";
 import { responsiveImg } from "../lib/image";
 
 const DW_ACCENT = "#C5A059";
+const dwLogo = dwAsset("dw-logo");
 
 // Why MADIO D&W — reworded from the source catalogue PDF to remove
 // "manufacturer" framing and the blanket 15-Year Warranty claim.
 const whyPoints = [
-  "Ultra-slim aluminium profiles — interlocks as narrow as 17 mm — maximising glass area and delivering unobstructed panoramic views.",
+  `Ultra-slim aluminium profiles — interlock sightlines as narrow as ${dwMinInterlock} — maximising glass area and delivering unobstructed panoramic views.`,
   "Imported European hardware on every system, ensuring precision tolerances, smooth long-life operation, and elevated tactile quality.",
   "Complete technical support — from architectural shop drawings through to on-site installation supervision.",
   "Custom finish library: any RAL shade in premium powder-coat, or bright and matte anodized profiles for a timeless architectural finish.",
@@ -42,6 +45,7 @@ const whyPoints = [
 // imported hardware, warranty.
 const heroProofPoints = [
   { figure: dwMinInterlock, label: "Ultra-slim interlock" },
+  { figure: dwMaxHeight, label: "Max window height" },
   { figure: "Imported", label: "European hardware" },
   { figure: DW_WARRANTY, label: "Warranty per system" },
 ];
@@ -72,7 +76,7 @@ const OliveTexture: React.FC<{ className?: string; opacity?: string }> = ({
 const CategoryCard: React.FC<{ cat: DWCategoryMeta; index: number }> = ({ cat, index }) => {
   const system = dwSystems.find((s) => s.id === cat.id);
   const clientPhotos = getCategoryPhotos(cat.id);
-  const thumbnail = cat.isPopulated ? system?.images[0] : clientPhotos[0]?.secureUrl;
+  const thumbnail = cat.isPopulated ? (system?.images[0] ?? system?.visual?.src) : clientPhotos[0]?.secureUrl;
   const isAvailable = cat.isPopulated || clientPhotos.length > 0;
 
   return (
@@ -85,7 +89,7 @@ const CategoryCard: React.FC<{ cat: DWCategoryMeta; index: number }> = ({ cat, i
         {thumbnail ? (
           <img
             {...responsiveImg(thumbnail, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw", 600)}
-            alt={cat.name}
+            alt={system?.images[0] ? cat.name : system?.visual?.alt ?? cat.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -119,7 +123,7 @@ const CategoryCard: React.FC<{ cat: DWCategoryMeta; index: number }> = ({ cat, i
           {cat.name}
         </h3>
         <p className="text-xs text-[#6B6B6B] font-light leading-relaxed flex-grow">
-          {cat.description}
+          {system?.tagline ?? cat.description}
         </p>
         <div className="flex items-center space-x-1.5 mt-5 text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-[#C5A059]">
           <span>{isAvailable ? "Explore" : "View"}</span>
@@ -152,7 +156,7 @@ export const DoorsWindows: React.FC = () => {
     {/* ================================================================
         HERO
         ================================================================ */}
-    <section className="relative h-[95vh] flex items-center justify-center bg-[#121212] overflow-hidden">
+    <section className="relative min-h-[95vh] flex items-center justify-center bg-[#121212] overflow-hidden pt-32 pb-28">
       <div className="absolute inset-0 z-0">
         <div
           className="absolute inset-0 opacity-[0.12]"
@@ -166,17 +170,16 @@ export const DoorsWindows: React.FC = () => {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 text-center text-white flex flex-col items-center">
-        <div className="flex items-center space-x-2 border border-[#C5A059]/60 px-4 py-1.5 mb-8 animate-fade-in">
-          <Sparkles size={12} className="text-[#C5A059]" />
-          <span className="text-[10px] tracking-[0.3em] uppercase font-sans text-[#EBE8E2]">
-            {DW_POSITIONING.eyebrow}
-          </span>
-        </div>
+        {dwLogo ? (
+          <img src={dwLogo} alt="Madio Doors & Windows" width={900} height={268} className="w-52 md:w-72 h-auto mb-6 animate-fade-in" />
+        ) : (
+          <span className="text-[10px] tracking-[0.3em] uppercase font-sans text-[#EBE8E2] mb-8">{DW_POSITIONING.eyebrow}</span>
+        )}
         <p className="text-[11px] md:text-xs tracking-[0.35em] uppercase font-sans text-[#C4B9A8] mb-6">
           {DW_POSITIONING.line}
         </p>
 
-        <h1 className="text-4xl md:text-7xl lg:text-8xl font-serif font-light tracking-wide leading-[1.1] mb-6 animate-fade-in-up">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-light tracking-wide leading-[1.1] mb-6 animate-fade-in-up">
           Designed for Architecture. <br />
           <span className="italic font-normal text-[#C5A059]">Engineered for Living.</span>
         </h1>
@@ -185,7 +188,7 @@ export const DoorsWindows: React.FC = () => {
           Premium aluminium doors and windows shaped around architectural intent, material choice and the experience of living with the finished space.
         </p>
 
-        <dl className="grid grid-cols-3 gap-px bg-[#C5A059]/30 border border-[#C5A059]/30 mb-12 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+        <dl className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#C5A059]/30 border border-[#C5A059]/30 mb-12 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
           {heroProofPoints.map((p) => (
             <div key={p.label} className="bg-[#121212] px-3 py-4 md:px-6 md:py-5">
               <dt className="sr-only">{p.label}</dt>
@@ -211,7 +214,7 @@ export const DoorsWindows: React.FC = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center text-white/60 animate-bounce">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center text-white/60 animate-bounce">
         <span className="text-[9px] uppercase tracking-[0.25em] mb-2 font-sans font-light">Scroll Down</span>
         <ChevronDown size={14} />
       </div>
@@ -376,20 +379,13 @@ export const DoorsWindows: React.FC = () => {
             At A Glance
           </span>
           <h2 className="text-2xl md:text-3xl font-serif font-light text-[#121212]">
-            System Comparison
+            Window &amp; Door Systems Compared
           </h2>
+          <p className="text-xs text-[#6B6B6B] font-light mt-3">From the Madio 2026 product catalogue. Glass partitions are compared on the Design &amp; Materials page.</p>
         </div>
         <DataTable
-          headers={["System", "Max Height", "Max Width", "Max Load", "Wind Load", "Interlock", "Frame H."]}
-          rows={comparisonRows.map((r) => [
-            r.system,
-            r.maxHeight,
-            r.maxWidth,
-            r.loadCapacity,
-            r.windLoad,
-            r.interlock,
-            r.frameHeight,
-          ])}
+          headers={["System", "Max Height", "Max Width", "Glass", "Interlock", "Rollers", "Locking"]}
+          rows={comparisonRows.map((r) => [r.system, r.maxHeight, r.maxWidth, r.glass, r.interlock, r.loadCapacity, r.locking])}
         />
       </div>
     </section>
@@ -430,11 +426,33 @@ export const DoorsWindows: React.FC = () => {
       </div>
     </section>
 
-    {dwProjects.filter((p) => !p.isInspiration).length > 0 && (
-      <section className="border-t border-[#EBE8E2] bg-[#121212] py-16 px-6 md:px-12 text-center">
-        <Link to={`${DW_BASE}/projects`} className="text-[11px] uppercase tracking-[0.25em] font-sans text-[#C5A059] inline-flex items-center gap-2">
-          View completed Madio projects <ArrowRight size={12} />
-        </Link>
+    {dwProjects.filter((p) => !p.isInspiration && p.photos.length > 0).length > 0 && (
+      <section className="border-t border-[#EBE8E2] bg-[#121212] py-20 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+            Installed
+          </span>
+          <h2 className="text-3xl md:text-5xl font-serif font-light text-white leading-tight mb-10">
+            Madio on site, <span className="italic font-normal text-[#C5A059]">not imagined.</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dwProjects
+              .filter((p) => !p.isInspiration && p.photos.length > 0)
+              .slice(0, 2)
+              .map((p) => (
+                <Link key={p.slug} to={`${DW_BASE}/projects#${p.slug}`} className="group block">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#2A2A2A]">
+                    <img src={p.photos[0].src} alt={p.photos[0].alt} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <p className="mt-3 text-sm font-serif font-light text-white group-hover:text-[#C5A059] transition-colors">{p.name}</p>
+                  <p className="text-[11px] text-[#C4B9A8] font-light">{p.configurations?.join(", ")}</p>
+                </Link>
+              ))}
+          </div>
+          <Link to={`${DW_BASE}/projects`} className="mt-10 text-[11px] uppercase tracking-[0.25em] font-sans text-[#C5A059] inline-flex items-center gap-2">
+            View projects <ArrowRight size={12} />
+          </Link>
+        </div>
       </section>
     )}
 

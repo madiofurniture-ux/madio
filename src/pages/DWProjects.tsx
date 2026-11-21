@@ -38,10 +38,10 @@ const ProjectCase: React.FC<{ p: DWProject }> = ({ p }) => {
         )}
         <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-[#C5A059] block mb-2">{p.type}</span>
         <h3 className="text-2xl font-serif font-light text-[#121212] mb-1">{p.name}</h3>
-        <p className="text-xs text-[#6B6B6B] font-light mb-5">{p.location}</p>
+        {p.location ? <p className="text-xs text-[#6B6B6B] font-light mb-5">{p.location}</p> : <div className="mb-5" />}
         <dl className="mb-5">
           <Fact label="Architect / designer" value={p.architect} />
-          <Fact label="Systems" value={systems.map((s) => s!.name).join(", ")} />
+          <Fact label="Systems" value={systems.map((s) => s!.name).join(", ") || undefined} />
           <Fact label="Configurations" value={p.configurations?.join(", ")} />
           <Fact label="Glass and finish" value={p.glassAndFinish} />
           <Fact label="Installation" value={p.installationNotes} />
@@ -90,7 +90,7 @@ export const DWProjects: React.FC = () => {
             Delivered, <span className="italic text-[#C5A059]">not imagined.</span>
           </>
         }
-        intro="Madio installations documented as case studies: the project, the systems and configurations used, and the glass and finish choices. Only completed Madio work appears here."
+        intro="Madio installations documented as case studies: the project, the systems and configurations used, and the glass and finish choices. Only Madio's own installations appear here, including some photographed while work was in progress."
       />
 
       <section className="py-20 px-6 md:px-12">

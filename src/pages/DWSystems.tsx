@@ -15,8 +15,9 @@ const keySpecs = (id: DWCategoryId): string[] => {
   return [
     s.specs.interlock && `${s.specs.interlock} interlock`,
     s.specs.maxHeight && `up to ${s.specs.maxHeight} high`,
-    s.specs.loadCapacity && `${s.specs.loadCapacity} load capacity`,
-    s.specs.windLoad && `${s.specs.windLoad} wind load`,
+    s.specs.loadCapacity && `${s.specs.loadCapacity} rollers`,
+    s.family === "glass-partitions" && s.specs.glassThickness,
+    s.family === "glass-partitions" && s.specRows.find((r) => /profile/i.test(r.label))?.value,
   ].filter(Boolean) as string[];
 };
 
@@ -25,7 +26,7 @@ const SystemCard: React.FC<{ id: DWCategoryId }> = ({ id }) => {
   if (!meta) return null;
   const system = getSystemById(id);
   const isPublic = hasPublicPage(id);
-  const thumb = system?.images[0] ?? getCategoryPhotos(id)[0]?.secureUrl;
+  const thumb = system?.images[0] ?? getCategoryPhotos(id)[0]?.secureUrl ?? system?.visual?.src;
   const specs = keySpecs(id);
 
   const body = (
@@ -34,7 +35,7 @@ const SystemCard: React.FC<{ id: DWCategoryId }> = ({ id }) => {
         {thumb ? (
           <img
             {...responsiveImg(thumb, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw", 600)}
-            alt={meta.name}
+            alt={system?.images[0] ? meta.name : system?.visual?.alt ?? meta.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -43,6 +44,9 @@ const SystemCard: React.FC<{ id: DWCategoryId }> = ({ id }) => {
         )}
       </div>
       <div className="p-6 flex flex-col flex-grow">
+        {system?.badge && (
+          <span className="text-[9px] uppercase tracking-[0.25em] font-sans text-[#C5A059] mb-2">{system.badge}</span>
+        )}
         <h3 className="text-lg font-serif font-light text-[#121212] mb-2 group-hover:text-[#C5A059] transition-colors">
           {meta.name}
         </h3>
@@ -104,7 +108,7 @@ export const DWSystems: React.FC = () => {
             Systems, organised by <span className="italic text-[#C5A059]">how they are used.</span>
           </>
         }
-        intro="Choose by application: sliding, large-format, casement, folding or interior glazing. Each system page carries its catalogue specification, options and documentation."
+        intro="Seventeen systems from the Madio 2026 catalogue, grouped by application: sliding, large-format, casement, folding and glass partitions. Each system page carries its catalogue specification, options and documentation."
       >
         <nav aria-label="Applications" className="mt-10 flex flex-wrap gap-2">
           {dwApplicationGroups.map((g) => (
@@ -138,7 +142,11 @@ export const DWSystems: React.FC = () => {
 
       <section className="border-t border-[#EBE8E2] py-14 px-6 md:px-12">
         <div className="max-w-7xl mx-auto text-sm text-[#6B6B6B] font-light leading-relaxed max-w-3xl">
-          Fixed glazing, combination units and integrated insect mesh are configured within these systems. See{" "}
+          Card images are illustrative visuals from the Madio catalogue, not Madio installations; see{" "}
+          <Link to={`${DW_BASE}/projects`} className="text-[#121212] underline underline-offset-4 hover:text-[#C5A059]">
+            projects
+          </Link>{" "}
+          for installed work. Fixed glazing, combination units and integrated insect mesh are configured within these systems. See{" "}
           <Link to={`${DW_BASE}/design-materials#configurations`} className="text-[#121212] underline underline-offset-4 hover:text-[#C5A059]">
             opening configurations
           </Link>{" "}

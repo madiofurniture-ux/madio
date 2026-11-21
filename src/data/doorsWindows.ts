@@ -1,9 +1,12 @@
 // ============================================================
 // MADIO Doors & Windows — data model and catalogue
 //
-// SOURCE OF TRUTH: "Madio Catalogue 2026 — Visual Masterpiece.pdf"
-// (client-supplied product catalogue) + handwritten planning notes
-// (client-supplied, WhatsApp photo, 2026-07-16).
+// SOURCE OF TRUTH: the 2026 product catalogue "Madio Doors & Windows —
+// Product Catalogue" (client-supplied PDF, 2026-11) for system names and
+// specs; "Madio Catalogue 2026 — Visual Masterpiece.pdf" + handwritten
+// planning notes (2026-07-16) for the general copy (process, materials,
+// standards, comparison). The earlier HL-named systems were replaced by the
+// 2026 range on the client's instruction.
 //
 // CORRECTIONS APPLIED — do not revert without client sign-off:
 //   1. The source PDF calls Madio "a premium manufacturer." Madio does not
@@ -11,7 +14,8 @@
 //      by a production partner. All copy here is reworded to avoid
 //      "manufacturer" / "we manufacture" / "our factory" framing, and the
 //      production partner is never named.
-//   2. The source PDF claims a blanket "15-Year Warranty" per system. The
+//   2. The source PDFs claim 15 years (and, in the 2026 catalogue, 12 years
+//      for sliding and casement, 15 for partitions). The
 //      client has only confirmed 10 years as current truth, and specifically
 //      per-product (not a sitewide guarantee). Every warranty field below is
 //      "10 Years", stored per-system and hasValue()-gated in the UI — never
@@ -74,7 +78,7 @@ export interface DWTrackValue {
 export interface DWSystemSpec {
   // Track table — 2-track / 3-track sliding systems only.
   trackWidth?: DWTrackValue;
-  // Flat frame dimensions — HL 50 Casement Door only (not a sliding/track system).
+  // Frame / visible height and interlock sightline.
   frameWidth?: string;
   frameHeight?: string;
   interlock?: string;
@@ -92,15 +96,34 @@ export interface DWSystemSpec {
   warranty?: string;
 }
 
+export interface DWSpecRow {
+  label: string;
+  value: string;
+}
+
+export interface DWVisual {
+  src: string;
+  alt: string;
+}
+
 export interface DWSystem {
   id: DWCategoryId;
   name: string;
   tagline: string;
+  family: DWFamily;
+  badge?: string;
   description: string;
+  // The catalogue's own spec table, row for row, in its order.
+  specRows: DWSpecRow[];
+  // The catalogue's highlight tags (warranty tags left out on purpose).
+  highlights: string[];
   coreFeatures: string[];
+  // Normalised subset of specRows, used for comparison tables and cards.
   specs: DWSystemSpec;
   bestFor: string;
   images: string[];
+  // Illustrative catalogue imagery, never presented as a Madio installation.
+  visual?: DWVisual;
 }
 
 // Vite glob: resolves clean product photography once the client supplies it.
@@ -147,178 +170,425 @@ export const getCategoryPhotos = (id: DWCategoryId): DWCategoryPhoto[] =>
     a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0,
   );
 
+// --------------- The 2026 range ---------------
+// Source: "Madio Doors & Windows — Product Catalogue" (client-supplied PDF,
+// 2026-11). Names, subtitles, spec rows and highlight tags are copied as the
+// catalogue prints them. Two deliberate exclusions, per the correction notes
+// above: the catalogue's per-system warranty figures (12 / 15 years) are NOT
+// shown (DW_WARRANTY stays the confirmed figure until the client confirms a
+// change), and nothing here says Madio manufactures in-house.
+// Photos: the catalogue's own imagery is illustrative (not Madio
+// installations), so it sits in `visual` and is captioned as such on the page.
+// Real client photography uploaded via /admin/upload always comes first.
+
+export type DWFamily = "sliding-folding" | "casement" | "glass-partitions";
+
+export const dwFamilies: { id: DWFamily; title: string }[] = [
+  { id: "sliding-folding", title: "Sliding & Folding" },
+  { id: "casement", title: "Casement Windows" },
+  { id: "glass-partitions", title: "Glass Partitions" },
+];
+
+const visuals = import.meta.glob<string>("../assets/dw2026/*.webp", { eager: true, import: "default" });
+const visual = (id: string, alt: string): DWVisual | undefined => {
+  const src = visuals[`../assets/dw2026/${id}.webp`];
+  return src ? { src, alt } : undefined;
+};
+export const dwAsset = (name: string): string | undefined => visuals[`../assets/dw2026/${name}.webp`];
+
+const row = (label: string, value: string): DWSpecRow => ({ label, value });
+
+interface DWSystemInput extends Omit<DWSystem, "images" | "visual" | "coreFeatures" | "bestFor"> {
+  visualAlt: string;
+  bestFor?: string;
+}
+
+const sys = (s: DWSystemInput): DWSystem => {
+  const { visualAlt, ...rest } = s;
+  return {
+    ...rest,
+    coreFeatures: rest.highlights,
+    bestFor: rest.bestFor ?? "",
+    images: dwImg(rest.id),
+    visual: visual(rest.id, visualAlt),
+    specs: { ...rest.specs, warranty: DW_WARRANTY },
+  };
+};
+
 export const dwSystems: DWSystem[] = [
-  {
-    id: "hl-vista-slim",
-    name: "HL Vista Slim System",
-    tagline: "Premium sliding system engineered for large openings and maximum glass visibility.",
+  // ---------------- Sliding & Folding ----------------
+  sys({
+    id: "slidefold",
+    name: "Madio SlideFold",
+    tagline: "Panoramic Folding System",
+    family: "sliding-folding",
+    badge: "Signature",
     description:
-      "Introducing the HL Vista Slim Sliding System — a truly bespoke solution crafted for those who demand nothing less than perfection. This extra-premium range is engineered for an elite clientele and discerning projects worldwide, offering an unparalleled canvas of light and view. With industry-leading slim sightlines and exceptional load-bearing capacity, the Vista Slim blurs the lines between indoor comfort and the grandeur of the outdoors, transforming your space into an extraordinary sanctuary of light, openness, and sophisticated living.",
-    coreFeatures: [
-      "Sound Insulation — superior acoustic attenuation for undisturbed interiors",
-      "Water Tightness — engineered seals prevent ingress under extreme weather",
-      "Wind Load Resistance — rated to 2.8 KPA for high-exposure installations",
-      "Colour Customisation — available in any RAL shade or bespoke finish",
-      "Impact Resistance — tested for durability against mechanical stress",
+      "A panoramic slide-and-fold system for openings that need to clear completely. Panels fold and stack to one or both sides on 90° track joints with 45° sash joints, take glass from 5 to 20 mm and lock with multipoint hardware.",
+    specRows: [
+      row("Window Height (Max)", "2500 mm"),
+      row("Sash Height & Weight", "50 / 39 mm"),
+      row("Track Joint", "90°"),
+      row("Sash Joint", "45°"),
+      row("Glass Range", "5 – 20 mm"),
+      row("Locking Type", "Multipoint"),
+      row("Roller Capacity (2 Pcs)", "180 kg"),
     ],
+    highlights: ["Sound Insulation", "Water Tightness", "Colour Choice", "Impact Resistance"],
+    specs: { maxHeight: "2500 mm", glassThickness: "5 – 20 mm", lockingSystem: "Multipoint", loadCapacity: "180 kg (2 rollers)" },
+    visualAlt: "Living room opening fully onto a garden through folding glass doors",
+  }),
+  sys({
+    id: "vista-32",
+    name: "Madio Vista 32",
+    tagline: "Classic 32mm Profile",
+    family: "sliding-folding",
+    description:
+      "A large-format sliding system: shutters up to 4500 mm high and 2000 mm wide on 300 / 600 kg rollers, 26 – 32 mm glass, a 19 mm interlock sightline and multi locking, in 6063 aluminium alloy.",
+    specRows: [
+      row("2-Track Frame Width", "152 mm"),
+      row("Frame Height", "42 mm"),
+      row("Interlock Sightline", "19 mm"),
+      row("Glass Thickness", "26 – 32 mm"),
+      row("Max Shutter Height", "4500 mm"),
+      row("Max Shutter Width", "2000 mm"),
+      row("Aluminium Alloy", "6063"),
+      row("Locking Type", "Multi Locking"),
+      row("Roller Capacity", "300 / 600 kg"),
+    ],
+    highlights: ["Multi Locking", "Alloy 6063", "Large Format"],
     specs: {
-      trackWidth: { twoTrack: "150 mm", threeTrack: "217 mm" },
-      frameHeight: "31 mm",
-      interlock: "17 mm",
-      glassThickness: "12 – 32 mm",
+      trackWidth: { twoTrack: "152 mm" },
+      frameHeight: "42 mm",
+      interlock: "19 mm",
+      glassThickness: "26 – 32 mm",
       maxHeight: "4500 mm",
-      maxWidth: "3000 mm",
-      lockingSystem: "Multi-locking (Top & Bottom)",
-      netOption: "Pleated Net",
-      loadCapacity: "300 kg",
-      windLoad: "2.8 KPA",
-      warranty: DW_WARRANTY,
+      maxWidth: "2000 mm",
+      lockingSystem: "Multi locking",
+      loadCapacity: "300 / 600 kg",
     },
-    bestFor: "Large panoramic openings, penthouse glazing, premium residential projects.",
-    images: dwImg("hl-vista-slim"),
-  },
-  {
-    id: "hl-50-casement-door",
-    name: "HL 50 Casement Door",
-    tagline: "Grand openings, unyielding performance.",
+    visualAlt: "Double-height lobby glazed floor to ceiling with sliding panels",
+  }),
+  sys({
+    id: "monoslim",
+    name: "Madio Monoslim",
+    tagline: "Ultra-Thin Profile Window",
+    family: "sliding-folding",
+    badge: "Most Popular",
     description:
-      "The HL 50 Casement Door transforms standard door openings into statements of both elegance and robust functionality. Delivering effortless, wide-swinging operation that seamlessly connects your indoor and outdoor spaces, this system provides an opulent feel without compromising on an airtight seal and unyielding structural integrity. Versatile locking options ensure security meets sophistication at every threshold.",
-    coreFeatures: [
-      "Sound Insulation — acoustic sealing for peaceful interior environments",
-      "Water Tightness — continuous weather gaskets for complete seal integrity",
-      "Wind Load Resistance — structurally reinforced for exposed positions",
-      "Colour Customisation — unlimited RAL palette and wood-grain finishes",
-      "Impact Resistance — robust profile withstands daily operational demands",
+      "An ultra-thin sliding window with a 28 mm frame height and a 19 mm interlock sightline, in 2-track and 3-track frames. Shutters reach 3500 mm high and 2000 mm wide on 250 / 500 kg rollers, with 5 – 23 mm glass.",
+    specRows: [
+      row("2-Track Frame Width", "114 mm"),
+      row("3-Track Frame Width", "169 mm"),
+      row("Frame Height", "28 mm"),
+      row("Interlock Sightline", "19 mm"),
+      row("Glass Thickness", "5 – 23 mm"),
+      row("Max Shutter Height", "3500 mm"),
+      row("Max Shutter Width", "2000 mm"),
+      row("Aluminium Alloy", "6063"),
+      row("Roller Capacity", "250 / 500 kg"),
     ],
+    highlights: ["Ultra-Slim Frame", "Multi Locking", "Alloy 6063"],
     specs: {
-      frameWidth: "50 mm",
-      frameHeight: "46 mm",
-      glassThickness: "5 – 38 mm",
-      maxHeight: "2500 mm",
-      maxWidth: "1350 mm",
-      lockingSystem: "Multi-locking / Single Locking",
-      warranty: DW_WARRANTY,
-    },
-    bestFor: "Entry doors, French doors, bedroom and bathroom openings.",
-    images: dwImg("hl-50-casement-door"),
-  },
-  {
-    id: "hl-retro-gulf-slim",
-    name: "HL Retro Gulf Slim System",
-    tagline: "Embrace timeless charm with modern performance.",
-    description:
-      "The Retro Gulf Slim System is a masterful blend of vintage aesthetics with modern functionality. Meticulously crafted with slim aluminium profiles that evoke the distinctive charm of traditional Gulf design, this system delivers a fusion of nostalgic beauty and durable, low-maintenance performance. It brings sophisticated, old-world character to your contemporary space while maintaining the engineering rigour Madio is known for.",
-    coreFeatures: [
-      "Sound Insulation — effective noise reduction for residential comfort",
-      "Water Tightness — multi-chamber drainage for reliable weather protection",
-      "Wind Load Resistance — rated to 1.8 KPA for mid-rise applications",
-      "Colour Customisation — heritage tones and custom RAL finishes available",
-      "Impact Resistance — reinforced profiles for long-term reliability",
-    ],
-    specs: {
-      trackWidth: { twoTrack: "100 mm", threeTrack: "150 mm" },
-      frameHeight: "41 mm",
-      interlock: "25 mm",
+      trackWidth: { twoTrack: "114 mm", threeTrack: "169 mm" },
+      frameHeight: "28 mm",
+      interlock: "19 mm",
       glassThickness: "5 – 23 mm",
       maxHeight: "3500 mm",
       maxWidth: "2000 mm",
-      lockingSystem: "Single / Multi-locking",
-      netOption: "Shutter Net / Pleated Net",
-      loadCapacity: "120 kg",
-      windLoad: "1.8 KPA",
-      warranty: DW_WARRANTY,
+      lockingSystem: "Multi locking",
+      loadCapacity: "250 / 500 kg",
     },
-    bestFor: "Mid-size residential openings, balconies, apartment projects.",
-    images: dwImg("hl-retro-gulf-slim"),
-  },
-  {
-    id: "hl-ultra-slim",
-    name: "HL Ultra Slim System",
-    tagline: "Redefining transparency — the ultimate in minimalist aesthetics.",
+    visualAlt: "Living room with a full-height slim-framed sliding window onto a hillside",
+  }),
+  sys({
+    id: "breeze-35",
+    name: "Madio Breeze 35",
+    tagline: "Versatile 35mm Sliding System",
+    family: "sliding-folding",
     description:
-      "The Ultra Slim System represents the ultimate in minimalist aesthetics, featuring profiles so incredibly narrow they virtually disappear, creating a stunning effect of pure, uninterrupted glass. For architects seeking the closest experience to frameless glazing, the Ultra Slim delivers an invisible barrier that elevates your property with unparalleled elegance and openness — letting architecture and landscape take centre stage.",
-    coreFeatures: [
-      "Sound Insulation — precision-engineered seals minimise acoustic transfer",
-      "Water Tightness — concealed drainage channels ensure dry interiors",
-      "Wind Load Resistance — rated to 2.0 KPA despite near-invisible profiles",
-      "Colour Customisation — full RAL spectrum including anodised options",
-      "Impact Resistance — high-grade alloy construction for structural confidence",
+      "A versatile 35 mm sliding system in 2-track and 3-track frames, with multi or single locking and an optional mosquito net. Shutters reach 3500 mm high and 2000 mm wide, with 5 – 24 mm glass and 250 / 500 kg rollers.",
+    specRows: [
+      row("2-Track Frame Width", "95 mm"),
+      row("3-Track Frame Width", "145 mm"),
+      row("Frame Height", "31 / 41 mm"),
+      row("Interlock Sightline", "25 mm"),
+      row("Glass Thickness", "5 – 24 mm"),
+      row("Max Shutter Height", "3500 mm"),
+      row("Max Shutter Width", "2000 mm"),
+      row("Aluminium Alloy", "6063"),
+      row("Locking Type", "Multi / Single"),
+      row("Mosquito Net", "Optional"),
+      row("Roller Capacity", "250 / 500 kg"),
     ],
+    highlights: ["Sound Insulation", "Water Tightness", "Colour Choice", "Impact Resistance"],
     specs: {
-      trackWidth: { twoTrack: "118 mm", threeTrack: "173 mm" },
-      frameHeight: "28 mm",
-      interlock: "19 mm",
-      glassThickness: "5 – 20 mm",
-      maxHeight: "3600 mm",
+      trackWidth: { twoTrack: "95 mm", threeTrack: "145 mm" },
+      frameHeight: "31 / 41 mm",
+      interlock: "25 mm",
+      glassThickness: "5 – 24 mm",
+      maxHeight: "3500 mm",
       maxWidth: "2000 mm",
-      lockingSystem: "Multi-locking (Top & Bottom)",
-      netOption: "Pleated Net",
-      loadCapacity: "250 kg",
-      windLoad: "2.0 KPA",
-      warranty: DW_WARRANTY,
+      lockingSystem: "Multi / single",
+      netOption: "Mosquito net, optional",
+      loadCapacity: "250 / 500 kg",
     },
-    bestFor: "Luxury villas, designer residences, minimalist architectural projects.",
-    images: dwImg("hl-ultra-slim"),
-  },
-  {
-    id: "hl-eco-gulf-slim",
-    name: "HL Eco Gulf Slim System",
-    tagline: "Smart design that enhances aesthetics and natural light without exceeding your budget.",
+    visualAlt: "Bedroom under a pitched roof with a wide glazed sliding wall",
+  }),
+  sys({
+    id: "zephyr-29",
+    name: "Madio Zephyr 29",
+    tagline: "Compact 29mm Sliding System",
+    family: "sliding-folding",
     description:
-      "The Eco Gulf Slim System is a smart and affordable upgrade for any renovation or new construction project. Engineered to enhance your home's aesthetics and natural light without exceeding your budget, it delivers the coveted sleek, minimalist look that defines the Madio range. This system proves that premium fenestration need not carry a premium price — bringing quality, performance, and style to every home.",
-    coreFeatures: [
-      "Sound Insulation — effective noise dampening for everyday residential use",
-      "Water Tightness — sealed construction prevents weather ingress",
-      "Wind Load Resistance — rated to 0.8 KPA for standard residential settings",
-      "Colour Customisation — wide selection of RAL colours and finishes",
-      "Impact Resistance — durable construction for lasting daily performance",
+      "A compact 29 mm sliding system in 2-track and 3-track frames, with a 23 mm slim interlock, 90° track and sash joints and multipoint locking, for windows up to 3000 mm high.",
+    specRows: [
+      row("2-Track Depth & Height", "83 / 55 mm"),
+      row("3-Track Depth & Height", "125 / 55 mm"),
+      row("Window Height (Max)", "3000 mm"),
+      row("Sash Height & Weight", "23 / 39 mm"),
+      row("Slim Interlocking", "23 mm"),
+      row("Track Joint", "90°"),
+      row("Sash Joint", "90°"),
+      row("Glass Range", "5 – 20 mm"),
+      row("Locking Type", "Multipoint"),
+      row("Roller Capacity", "180 kg"),
     ],
+    highlights: ["Compact Profile", "Multipoint Lock", "Slim Interlock"],
     specs: {
-      trackWidth: { twoTrack: "83 mm", threeTrack: "120 mm" },
-      frameHeight: "41 mm",
-      interlock: "19 mm",
-      glassThickness: "5 – 11.5 mm",
-      maxHeight: "2100 mm",
-      maxWidth: "1200 mm",
-      lockingSystem: "Single / Multi-locking",
-      netOption: "Shutter Net / Pleated Net",
-      loadCapacity: "80 kg",
-      windLoad: "0.8 KPA",
-      warranty: DW_WARRANTY,
+      trackWidth: { twoTrack: "83 mm", threeTrack: "125 mm" },
+      frameHeight: "55 mm",
+      interlock: "23 mm",
+      glassThickness: "5 – 20 mm",
+      maxHeight: "3000 mm",
+      lockingSystem: "Multipoint",
+      loadCapacity: "180 kg",
     },
-    bestFor: "Budget-conscious residential projects, compact apartments, internal partitions.",
-    images: dwImg("hl-eco-gulf-slim"),
-  },
-  {
-    id: "hl-elite-gulf-slim",
-    name: "HL Elite Gulf Slim System",
-    tagline: "Unyielding strength, uninterrupted views.",
+    visualAlt: "Gridded dark-framed window looking out over a forested valley",
+  }),
+  sys({
+    id: "phantom",
+    name: "Madio Phantom",
+    tagline: "Superslim Precision Profile",
+    family: "sliding-folding",
     description:
-      "For projects demanding the ultimate in performance and elegance, the Elite Gulf Slim System is designed to withstand the rigorous demands of large openings and challenging environments. Its signature slim sightlines ensure superior strength, smooth operation, and sophisticated design converge — delivering uncompromised structural performance for high-rise facades, commercial buildings, and architectural projects where wind resistance and durability are non-negotiable.",
-    coreFeatures: [
-      "Sound Insulation — high-performance acoustic isolation for commercial environments",
-      "Water Tightness — advanced multi-seal architecture for extreme weather defence",
-      "Wind Load Resistance — rated to 2.8 KPA for high-rise and coastal installations",
-      "Colour Customisation — any RAL colour, anodised, or speciality finish available",
-      "Impact Resistance — heavy-duty construction for demanding applications",
+      "A superslim sliding profile with a 20 mm interlocking sightline and a wide 5 – 30 mm glass range, for windows up to 3500 mm high on 280 kg rollers with multipoint locking.",
+    specRows: [
+      row("2-Track Depth & Height", "150 / 31 mm"),
+      row("Window Height (Max)", "3500 mm"),
+      row("Sash Height & Weight", "20 / 39 mm"),
+      row("Slim Interlocking", "20 mm"),
+      row("Track Joint", "90°"),
+      row("Sash Joint", "90°"),
+      row("Glass Range", "5 – 30 mm"),
+      row("Locking Type", "Multipoint"),
+      row("Roller Capacity", "280 kg"),
     ],
+    highlights: ["20mm Sightline", "Wide Glass Range", "Multipoint Lock"],
     specs: {
-      trackWidth: { twoTrack: "108 mm", threeTrack: "161 mm" },
-      frameHeight: "41 mm",
-      interlock: "21 mm",
-      glassThickness: "10 – 28 mm",
-      maxHeight: "4000 mm",
-      maxWidth: "2100 mm",
-      lockingSystem: "Single / Multi-locking",
-      netOption: "Shutter Net / Pleated Net",
-      loadCapacity: "250 kg",
-      windLoad: "2.8 KPA",
-      warranty: DW_WARRANTY,
+      trackWidth: { twoTrack: "150 mm" },
+      frameHeight: "31 mm",
+      interlock: "20 mm",
+      glassThickness: "5 – 30 mm",
+      maxHeight: "3500 mm",
+      lockingSystem: "Multipoint",
+      loadCapacity: "280 kg",
     },
-    bestFor: "High-rise buildings, commercial facades, large-span commercial openings.",
-    images: dwImg("hl-elite-gulf-slim"),
-  },
+    visualAlt: "Tall glazed opening framing a sea view",
+  }),
+  sys({
+    id: "titan-40",
+    name: "Madio Titan 40",
+    tagline: "Heavy Duty 40mm System",
+    family: "sliding-folding",
+    badge: "Heavy Duty",
+    description:
+      "The heavy-duty system of the range: windows up to 4800 mm high on 380 kg rollers, 38 mm glass, a 20 mm slim interlock and multipoint locking.",
+    specRows: [
+      row("2-Track Depth & Height", "154 / 54 mm"),
+      row("Window Height (Max)", "4800 mm"),
+      row("Sash Height & Weight", "20 / 39 mm"),
+      row("Slim Interlocking", "20 mm"),
+      row("Track Joint", "90°"),
+      row("Sash Joint", "90°"),
+      row("Glass Range", "38 mm"),
+      row("Locking Type", "Multipoint"),
+      row("Roller Capacity", "380 kg"),
+    ],
+    highlights: ["4800mm Max Height", "380Kg Roller", "Heavy Duty"],
+    specs: {
+      trackWidth: { twoTrack: "154 mm" },
+      frameHeight: "54 mm",
+      interlock: "20 mm",
+      glassThickness: "38 mm",
+      maxHeight: "4800 mm",
+      lockingSystem: "Multipoint",
+      loadCapacity: "380 kg",
+    },
+    visualAlt: "Tall glazed doors opening onto a balcony above the sea",
+  }),
+  // ---------------- Casement Windows ----------------
+  sys({
+    id: "casement-40",
+    name: "Madio Casement 40",
+    tagline: "40mm Casement System",
+    family: "casement",
+    description:
+      "A 40 mm casement system with 45° precision joints, a weather seal and single or multipoint locking, for windows up to 1500 mm high with 5 – 20 mm glass.",
+    specRows: [
+      row("Track Depth & Visible Height", "83 / 50 mm"),
+      row("Window Height (Max)", "1500 mm"),
+      row("Track Joint", "45°"),
+      row("Sash Joint", "45°"),
+      row("Glass Range", "5 – 20 mm"),
+      row("Locking Type", "Single & Multipoint"),
+    ],
+    highlights: ["Single & Multipoint", "45° Precision Joints", "Weather Seal"],
+    specs: { frameHeight: "50 mm", glassThickness: "5 – 20 mm", maxHeight: "1500 mm", lockingSystem: "Single & multipoint" },
+    visualAlt: "Bedroom with a row of casement windows",
+  }),
+  sys({
+    id: "casement-52",
+    name: "Madio Casement 52",
+    tagline: "52mm Premium Casement",
+    family: "casement",
+    description:
+      "A 52 mm premium casement with 45° joints and single or multipoint locking, for windows up to 1500 mm high with 5 – 20 mm glass. Rated for sound insulation, water tightness, wind load and impact resistance.",
+    specRows: [
+      row("Track Depth & Visible Height", "83 / 50 mm"),
+      row("Window Height (Max)", "1500 mm"),
+      row("Track Joint", "45°"),
+      row("Sash Joint", "45°"),
+      row("Glass Range", "5 – 20 mm"),
+      row("Locking Type", "Single & Multipoint"),
+    ],
+    highlights: ["Sound Insulation", "Water Tightness", "Wind Load Rated", "Impact Resistance"],
+    specs: { frameHeight: "50 mm", glassThickness: "5 – 20 mm", maxHeight: "1500 mm", lockingSystem: "Single & multipoint" },
+    visualAlt: "Reading corner lit by dark-framed casement windows",
+  }),
+  // ---------------- Glass Partitions ----------------
+  sys({
+    id: "division-82",
+    name: "Madio Division 82",
+    tagline: "82mm Single Glass Partition",
+    family: "glass-partitions",
+    description: "An 82 mm single glass partition in 6 mm toughened glass with a 12 mm dual-slide partition board and a powder-coated finish.",
+    specRows: [row("Glass Type", "6mm Toughened"), row("Partition Board", "12mm Dual Slide"), row("Finish", "Powder Coated")],
+    highlights: ["6mm Toughened Glass", "Powder Coated", "Special Hardware"],
+    specs: { glassThickness: "6 mm toughened" },
+    visualAlt: "Frosted glass partition wall in an open interior",
+  }),
+  sys({
+    id: "division-82-dg",
+    name: "Madio Division 82 DG",
+    tagline: "82mm Double Glass Partition",
+    family: "glass-partitions",
+    description: "The double glass version of the Division 82, in 6 mm toughened glass with a 12 mm dual-slide partition board, powder coated, with a motorised curtain option.",
+    specRows: [
+      row("Glass Type", "6mm Toughened"),
+      row("Partition Board", "12mm Dual Slide"),
+      row("Finish", "Powder Coated"),
+      row("Special Feature", "Motorized Curtain"),
+    ],
+    highlights: ["Double Glass", "Motorized Curtain Option", "Powder Coated"],
+    specs: { glassThickness: "6 mm toughened" },
+    visualAlt: "Glazed mezzanine partition above a lounge",
+  }),
+  sys({
+    id: "division-85",
+    name: "Madio Division 85",
+    tagline: "85mm Single Glass Partition",
+    family: "glass-partitions",
+    description: "An 85 mm single glass partition in 6 mm toughened glass with a 12 mm dual-slide partition board and a powder-coated finish, for sound-proof and heat-resistant interiors.",
+    specRows: [row("Glass Type", "6mm Toughened"), row("Partition Board", "12mm Dual Slide"), row("Finish", "Powder Coated")],
+    highlights: ["Sound Proof", "Heat Resistance", "6mm Toughened"],
+    specs: { glassThickness: "6 mm toughened" },
+    visualAlt: "Office cabin enclosed by a glass partition",
+  }),
+  sys({
+    id: "division-85-dg",
+    name: "Madio Division 85 DG",
+    tagline: "85mm Double Glass Partition",
+    family: "glass-partitions",
+    description: "The double glass version of the Division 85, in 6 mm toughened glass with a 12 mm dual-slide partition board, powder coated, with a motorised curtain option.",
+    specRows: [
+      row("Glass Type", "6mm Toughened"),
+      row("Partition Board", "12mm Dual Slide"),
+      row("Finish", "Powder Coated"),
+      row("Special Feature", "Motorized Curtain"),
+    ],
+    highlights: ["Sound Proof", "Heat Resistance", "Motorized Curtain"],
+    specs: { glassThickness: "6 mm toughened" },
+    visualAlt: "Frosted double glass partition wall",
+  }),
+  sys({
+    id: "slimwall-25x50",
+    name: "Madio Slimwall 25x50",
+    tagline: "25x50mm Slim Glass Partition",
+    family: "glass-partitions",
+    description: "A slim glass partition on a 25 × 50 mm profile, taking 6 – 12 mm toughened glass, with a powder-coated finish.",
+    specRows: [row("Glass Type", "6 – 12mm Toughened"), row("Profile", "25 x 50 mm"), row("Finish", "Powder Coated")],
+    highlights: ["Sleek & Stylish", "6-12mm Glass", "Powder Coated"],
+    specs: { glassThickness: "6 – 12 mm toughened" },
+    visualAlt: "Slim-framed glass partition at mezzanine level",
+  }),
+  sys({
+    id: "grandwall-100",
+    name: "Madio Grandwall 100",
+    tagline: "100mm Single Glass Partition",
+    family: "glass-partitions",
+    description: "A heavy-duty 100 mm profile single glass partition, taking 6 – 12 mm toughened glass, with a powder-coated finish.",
+    specRows: [row("Glass Type", "6 – 12mm Toughened"), row("Profile Width", "100 mm"), row("Finish", "Powder Coated")],
+    highlights: ["6-12mm Glass", "Heavy Duty Profile", "Powder Coated"],
+    specs: { glassThickness: "6 – 12 mm toughened" },
+    visualAlt: "Workspace behind a full-height glass partition",
+  }),
+  sys({
+    id: "grandwall-100-dg",
+    name: "Madio Grandwall 100 DG",
+    tagline: "100mm Double Glass Partition",
+    family: "glass-partitions",
+    description: "The double glass version of the Grandwall 100: a 100 mm profile with 6 – 12 mm toughened glass and a powder-coated finish.",
+    specRows: [
+      row("Glass Type", "6 – 12mm Toughened"),
+      row("Profile Width", "100 mm"),
+      row("Configuration", "Double Glass"),
+      row("Finish", "Powder Coated"),
+    ],
+    highlights: ["Double Glass", "6-12mm Toughened", "Powder Coated"],
+    specs: { glassThickness: "6 – 12 mm toughened" },
+    visualAlt: "Meeting room enclosed by a gridded black-framed glass partition",
+  }),
+  sys({
+    id: "ultraslim-16x25",
+    name: "Madio Ultraslim 16x25",
+    tagline: "16x25mm Slim Glass Partition",
+    family: "glass-partitions",
+    description: "The slimmest partition profile in the range, 16 × 25 mm, for a frameless look with 6 – 12 mm toughened glass and a powder-coated finish.",
+    specRows: [row("Glass Type", "6 – 12mm Toughened"), row("Profile", "16 x 25 mm"), row("Finish", "Powder Coated")],
+    highlights: ["Ultra Slim Frame", "Frameless Look", "Powder Coated"],
+    specs: { glassThickness: "6 – 12 mm toughened" },
+    visualAlt: "Frosted glass partition with an ultra-slim frame",
+  }),
 ];
+
+// Hardware collection, from the same catalogue.
+export const dwHardwarePro = {
+  name: "Madio Hardware Pro",
+  tagline: "Premium Hardware Collection",
+  specRows: [
+    row("Handle Models", "WPHH 2512, WPHH 2518"),
+    row("Lock Model", "533 BTF"),
+    row("Slide Controller", "WDSC 800, WDSC 900"),
+    row("Multi-Lock Body", "WMLBS 9"),
+    row("Finish", "Powder Coated / Chrome"),
+  ],
+  highlights: ["Multi-Point Locks", "Heavy Duty Rollers", "Premium Handles", "Corrosion Resistant"],
+};
+
+export const systemsInFamily = (f: DWFamily) => dwSystems.filter((s) => s.family === f);
+/** Window and door systems (everything except interior glass partitions). */
+export const dwOpeningSystems = dwSystems.filter((s) => s.family !== "glass-partitions");
 
 // --------------- Overview page content (real, client-supplied data) ---------------
 
@@ -330,8 +600,8 @@ export const materialComparison = [
   { parameter: "Thermal Performance", aluminium: "Thermal break technology for excellent insulation", wood: "Natural insulator but degrades with age", upvc: "Good insulation; weakens at weld joints" },
   { parameter: "Fire Resistance", aluminium: "Non-combustible; does not emit toxic fumes", wood: "Combustible; fire hazard", upvc: "Self-extinguishing but releases toxic gases" },
   { parameter: "Sustainability", aluminium: "100% recyclable; low embodied energy in recycling", wood: "Renewable but often unsustainably sourced", upvc: "Non-biodegradable; difficult to recycle" },
-  { parameter: "Max Span Capability", aluminium: "Up to 4500 mm height with slim sightlines", wood: "Limited by structural weight", upvc: "Limited; requires thick profiles for rigidity" },
-  { parameter: "Aesthetic Profile", aluminium: "Ultra-slim sightlines (17–25 mm interlock)", wood: "Bulky frames reduce glass area", upvc: "Wider frames compromise views" },
+  { parameter: "Max Span Capability", aluminium: "Up to 4800 mm height with slim sightlines", wood: "Limited by structural weight", upvc: "Limited; requires thick profiles for rigidity" },
+  { parameter: "Aesthetic Profile", aluminium: "Ultra-slim sightlines (19–25 mm interlock)", wood: "Bulky frames reduce glass area", upvc: "Wider frames compromise views" },
 ];
 
 export const windowDoorTypologies = [
@@ -434,7 +704,7 @@ export const dwPillars = [
   {
     title: "Minimalist Aesthetics",
     body:
-      "Ultra-slim profiles, with interlocks as narrow as 17 mm, give the glass the room. Frames recede so that light, view and architecture lead.",
+      "Ultra-slim profiles, with interlock sightlines as narrow as 19 mm, give the glass the room. Frames recede so that light, view and architecture lead.",
   },
   {
     title: "Sustainable Luxury",
@@ -443,15 +713,12 @@ export const dwPillars = [
   },
 ];
 
-// Derived from dwSystems so the range can never drift from the spec data.
-const kpaValues = dwSystems
-  .map((s) => parseFloat(s.specs.windLoad ?? ""))
-  .filter((n) => !Number.isNaN(n));
-const interlockValues = dwSystems
-  .map((s) => parseFloat(s.specs.interlock ?? ""))
-  .filter((n) => !Number.isNaN(n));
-export const dwWindLoadRange = `${Math.min(...kpaValues)} – ${Math.max(...kpaValues)} kPa`;
+// Derived from dwSystems so the figures can never drift from the spec data.
+const mmValues = (pick: (s: DWSystem) => string | undefined) =>
+  dwSystems.map((s) => parseFloat(pick(s) ?? "")).filter((n) => !Number.isNaN(n));
+const interlockValues = mmValues((s) => s.specs.interlock);
 export const dwMinInterlock = `${Math.min(...interlockValues)} mm`;
+export const dwMaxHeight = `${Math.max(...mmValues((s) => s.specs.maxHeight))} mm`;
 
 export const dwPerformanceHighlights = [
   {
@@ -466,8 +733,8 @@ export const dwPerformanceHighlights = [
   },
   {
     title: "Wind Load",
-    figure: dwWindLoadRange,
-    body: "Rated wind-load resistance across the range, up to 2.8 kPa on the Vista Slim and Elite Gulf Slim for high-rise and coastal sites.",
+    figure: "Class A",
+    body: "Structurally engineered frames for wind-load resistance. The Casement 52 is wind-load rated, and the Titan 40 carries windows up to 4800 mm high.",
   },
 ];
 
@@ -482,24 +749,26 @@ export const getSystemById = (id: string): DWSystem | undefined =>
 // "System Comparison At A Glance" — built directly from dwSystems so the
 // table can never drift from the per-system spec data above.
 export interface DWComparisonRow {
+  id: string;
   system: string;
   maxHeight: string;
   maxWidth: string;
   loadCapacity: string;
-  windLoad: string;
+  glass: string;
   interlock: string;
-  frameHeight: string;
+  locking: string;
 }
 
 const DASH = "—";
 
 export const getSystemComparison = (): DWComparisonRow[] =>
-  dwSystems.map((s) => ({
+  dwOpeningSystems.map((s) => ({
+    id: s.id,
     system: s.name,
     maxHeight: s.specs.maxHeight ?? DASH,
     maxWidth: s.specs.maxWidth ?? DASH,
     loadCapacity: s.specs.loadCapacity ?? DASH,
-    windLoad: s.specs.windLoad ?? DASH,
+    glass: s.specs.glassThickness ?? DASH,
     interlock: s.specs.interlock ?? DASH,
-    frameHeight: s.specs.frameHeight ?? DASH,
+    locking: s.specs.lockingSystem ?? DASH,
   }));

@@ -2,8 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import {
+  dwHardwarePro,
+  dwOpeningSystems,
   dwSystems,
   getCategoryMeta,
+  systemsInFamily,
   materialComparison,
   aluminiumAdvantages,
   windowDoorTypologies,
@@ -19,6 +22,7 @@ const DASH = "—";
 const sections = [
   { id: "profiles", label: "Aluminium Profiles" },
   { id: "glazing", label: "Glass & Glazing" },
+  { id: "partitions", label: "Glass Partitions" },
   { id: "hardware", label: "Hardware" },
   { id: "finishes", label: "Finishes" },
   { id: "configurations", label: "Opening Configurations" },
@@ -60,7 +64,9 @@ export const DWDesignMaterials: React.FC = () => {
     },
   );
 
-  const bifold = getCategoryMeta("sliding-folding-bifold");
+  const bifold = getCategoryMeta("slidefold");
+  const rowValue = (id: string, re: RegExp) =>
+    dwSystems.find((s) => s.id === id)?.specRows.filter((r) => re.test(r.label)).map((r) => r.value).join(" · ") || DASH;
 
   return (
     <div className="bg-[#F4F1EA]">
@@ -92,20 +98,23 @@ export const DWDesignMaterials: React.FC = () => {
           <SectionHeading
             eyebrow="Aluminium Profiles"
             title="Slim sightlines, architectural-grade alloy."
-            intro="All systems use 6063-T5 architectural-grade aluminium. Interlocks run from 17 mm on the Vista Slim, so the frame recedes and the glass leads."
+            intro="Profiles in 6063 aluminium alloy, with interlock sightlines from 19 mm on the Monoslim and Vista 32. Dimensions are as the 2026 catalogue states them for each system."
           />
           <DataTable
-            caption="Profile dimensions by system"
-            headers={["System", "Frame Width", "Frame Height", "Interlock", "2-Track Width", "3-Track Width"]}
-            rows={dwSystems.map((s) => [
+            caption="Profile dimensions by system (mm)"
+            headers={["System", "2-Track", "3-Track", "Frame / Visible Height", "Interlock", "Joints (Track / Sash)"]}
+            rows={dwOpeningSystems.map((s) => [
               s.name,
-              s.specs.frameWidth ?? DASH,
-              s.specs.frameHeight ?? DASH,
+              rowValue(s.id, /^2-Track|^Track Depth/),
+              rowValue(s.id, /^3-Track/),
+              rowValue(s.id, /^Frame Height/) !== DASH ? rowValue(s.id, /^Frame Height/) : s.family === "casement" ? "50 mm visible" : DASH,
               s.specs.interlock ?? DASH,
-              s.specs.trackWidth?.twoTrack ?? DASH,
-              s.specs.trackWidth?.threeTrack ?? DASH,
+              [rowValue(s.id, /^Track Joint/), rowValue(s.id, /^Sash Joint/)].filter((v) => v !== DASH).join(" / ") || DASH,
             ])}
           />
+          <p className="mt-3 text-[11px] text-[#6B6B6B] font-light">
+            2-track and 3-track values are frame width, or depth / height where the catalogue gives both.
+          </p>
         </div>
       </section>
 
@@ -114,17 +123,38 @@ export const DWDesignMaterials: React.FC = () => {
           <SectionHeading
             eyebrow="Glass & Glazing"
             title="Single, double-glazed or laminated."
-            intro="Every system accepts single, DGU (double-glazed unit) and laminated glass. The glass thickness each system takes, and the panel sizes it supports, are below."
+            intro="Single, DGU (double-glazed unit) and laminated glazing. The glass range each window and door system takes, and the sizes it supports, are below."
           />
           <DataTable
             caption="Glazing range by system"
-            headers={["System", "Glass Thickness", "Max Height", "Max Width", "Max Load"]}
-            rows={dwSystems.map((s) => [
+            headers={["System", "Glass Range", "Max Height", "Max Width", "Roller Capacity"]}
+            rows={dwOpeningSystems.map((s) => [
               s.name,
               s.specs.glassThickness ?? DASH,
               s.specs.maxHeight ?? DASH,
               s.specs.maxWidth ?? DASH,
               s.specs.loadCapacity ?? DASH,
+            ])}
+          />
+        </div>
+      </section>
+
+      <section id="partitions" className="scroll-mt-24 border-t border-[#EBE8E2] py-20 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <SectionHeading
+            eyebrow="Glass Partitions"
+            title="Eight partition systems, single and double glass."
+            intro="Toughened glass on powder-coated profiles, from the 16 × 25 mm Ultraslim to the 100 mm Grandwall."
+          />
+          <DataTable
+            caption="Glass partition systems"
+            headers={["System", "Glass", "Profile / Board", "Finish", "Special Feature"]}
+            rows={systemsInFamily("glass-partitions").map((s) => [
+              s.name,
+              rowValue(s.id, /^Glass Type/),
+              [rowValue(s.id, /^Profile/), rowValue(s.id, /^Partition Board/), rowValue(s.id, /^Configuration/)].filter((v) => v !== DASH).join(" · "),
+              rowValue(s.id, /^Finish/),
+              rowValue(s.id, /^Special/),
             ])}
           />
         </div>
@@ -137,11 +167,27 @@ export const DWDesignMaterials: React.FC = () => {
             title="Imported European hardware on every system."
             intro="Precision tolerances, smooth long-life operation and multi-point locking where the opening calls for security."
           />
-          <DataTable
-            caption="Locking options by system"
-            headers={["System", "Locking"]}
-            rows={dwSystems.map((s) => [s.name, s.specs.lockingSystem ?? DASH])}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <DataTable
+              caption="Locking by system"
+              headers={["System", "Locking"]}
+              rows={dwOpeningSystems.map((s) => [s.name, s.specs.lockingSystem ?? DASH])}
+            />
+            <div>
+              <DataTable
+                caption={`${dwHardwarePro.name}: ${dwHardwarePro.tagline}`}
+                headers={["Component", "Model / Finish"]}
+                rows={dwHardwarePro.specRows.map((r) => [r.label, r.value])}
+              />
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {dwHardwarePro.highlights.map((h) => (
+                  <li key={h} className="text-[10px] uppercase tracking-[0.15em] font-sans border border-[#EBE8E2] bg-white px-3 py-1.5 text-[#121212]">
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -178,13 +224,20 @@ export const DWDesignMaterials: React.FC = () => {
           <SectionHeading
             eyebrow="Opening Configurations"
             title="Configured to the opening."
-            intro="Sliding, casement, fixed and combination configurations, with insect protection integrated where needed."
+            intro="Sliding, slide & fold, casement, fixed and combination configurations, with insect protection integrated where needed. The opening types catalogue draws 49 of them as elevations."
           />
           <DataTable
             caption="Configurations and typical applications"
             headers={["Configuration", "Application"]}
             rows={windowDoorTypologies.map((r) => [r.configuration, r.application])}
           />
+          <a
+            href="/resources/madio-opening-types-49-options.pdf"
+            download
+            className="mt-6 text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-[#C5A059] inline-flex items-center gap-1.5"
+          >
+            Download the opening types catalogue (PDF, 49 options) <ArrowRight size={11} />
+          </a>
           {bifold?.panelConfigs && bifold.panelConfigs.length > 0 && (
             <div className="mt-8 bg-white border border-[#EBE8E2] p-6">
               <h3 className="text-sm font-serif font-light text-[#121212] mb-3">{bifold.name}: panel arrangements</h3>
@@ -205,7 +258,7 @@ export const DWDesignMaterials: React.FC = () => {
           <SectionHeading
             eyebrow="Insect Mesh"
             title="Protection without compromising the view."
-            intro="Pleated and shutter nets are integrated into the sliding systems, so insect protection does not add visual bulk."
+            intro="Mosquito-mesh shutters run on the third track of 3-track sliding frames, and casement windows and doors take an inner mesh shutter, so insect protection does not add visual bulk."
           />
           <DataTable
             caption="Insect mesh options by system"
