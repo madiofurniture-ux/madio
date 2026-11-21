@@ -61,7 +61,7 @@ export const organizationJsonLd = {
   logo: `${SITE_URL}/android-chrome-512x512.png`,
   image: `${SITE_URL}${DEFAULT_OG_IMAGE_PATH}`,
   email: "info@madio.in",
-  telephone: ["+91 99486 01899", "+91 99486 01599"],
+  telephone: ["+91 99486 01899", "+91 99486 01799"],
   address: {
     "@type": "PostalAddress",
     streetAddress: "1st Floor, Road No.1, Plot No.25, Shilpa Hills, Kondapur",
