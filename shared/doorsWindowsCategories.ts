@@ -25,7 +25,8 @@ export type DoorsWindowsCategoryId =
   | "modular-partition-facade"
   | "glass-partitions-doors"
   | "casement-windows-openable"
-  | "sliding-folding-bifold";
+  | "sliding-folding-bifold"
+  | "motorised-integrated-blinds";
 
 export interface DoorsWindowsCategoryMeta {
   id: DoorsWindowsCategoryId;
@@ -116,6 +117,12 @@ export const doorsWindowsCategories: DoorsWindowsCategoryMeta[] = [
     description: "Sliding folding bi-fold systems available in multiple panel arrangements.",
     isPopulated: false,
     panelConfigs: ["3+0", "3+1", "3+3 (centre openable)", "5+1", "5+0"],
+  },
+  {
+    id: "motorised-integrated-blinds",
+    name: "Motorised Integrated Blinds",
+    description: "Motorised blinds integrated into the window system.",
+    isPopulated: false,
   },
 ];
 

@@ -11,6 +11,13 @@ import {
   madioProcess,
   performanceStandards,
   getSystemComparison,
+  getCategoryMeta,
+  dwPillars,
+  dwPerformanceHighlights,
+  dwProductFamilies,
+  dwProjectGallery,
+  dwMinInterlock,
+  DW_WARRANTY,
 } from "../data/doorsWindows";
 import type { DWCategoryMeta } from "../data/doorsWindows";
 import { usePageMeta } from "../hooks/usePageMeta";
@@ -25,7 +32,15 @@ const whyPoints = [
   "Imported European hardware on every system, ensuring precision tolerances, smooth long-life operation, and elevated tactile quality.",
   "Complete technical support — from architectural shop drawings through to on-site installation supervision.",
   "Custom finish library: any RAL shade in premium powder-coat, or bright and matte anodized profiles for a timeless architectural finish.",
-  "10-year warranty coverage confirmed per system, backed by rigorous quality assurance at every stage.",
+  `${DW_WARRANTY.replace(" Years", "-year")} warranty coverage confirmed per system, backed by rigorous quality assurance at every stage.`,
+];
+
+// Lead proof points for the hero, per the brand brief: ultra-slim profiles,
+// imported hardware, warranty.
+const heroProofPoints = [
+  { figure: dwMinInterlock, label: "Ultra-slim interlock" },
+  { figure: "Imported", label: "European hardware" },
+  { figure: DW_WARRANTY, label: "Warranty per system" },
 ];
 
 const OliveTexture: React.FC<{ className?: string; opacity?: string }> = ({
@@ -151,7 +166,7 @@ const DataTable: React.FC<{ headers: string[]; rows: string[][] }> = ({ headers,
 export const DoorsWindows: React.FC = () => {
   usePageMeta(
     "Madio Doors and Windows | Premium Fenestration Systems for Architecture",
-    "Custom-engineered architectural aluminium fenestration systems — slim sliding systems, casement doors, metal ceilings, balcony railings, and glass partitions."
+    "Premium architectural aluminium by Madio: ultra-slim sliding systems, casement doors and windows, glass partitions and motorised integrated blinds, with imported European hardware and a " + DW_WARRANTY.replace(" Years", "-year") + " warranty per system."
   );
 
   const comparisonRows = getSystemComparison();
@@ -189,8 +204,18 @@ export const DoorsWindows: React.FC = () => {
         </h1>
 
         <p className="text-sm md:text-lg tracking-wider font-light text-[#F4F1EA]/95 max-w-2xl mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          Custom-engineered architectural aluminium fenestration systems, made to Madio's exacting specifications for discerning residential and commercial projects.
+          Premium architectural aluminium: slim sliding systems, casement doors and windows, glass partitions and motorised integrated blinds, custom-engineered to Madio's exacting specifications.
         </p>
+
+        <dl className="grid grid-cols-3 gap-px bg-[#C5A059]/30 border border-[#C5A059]/30 mb-12 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+          {heroProofPoints.map((p) => (
+            <div key={p.label} className="bg-[#121212] px-3 py-4 md:px-6 md:py-5">
+              <dt className="sr-only">{p.label}</dt>
+              <dd className="text-lg md:text-2xl font-serif font-light text-[#C5A059] leading-none mb-2">{p.figure}</dd>
+              <dd className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-sans text-[#EBE8E2]/80">{p.label}</dd>
+            </div>
+          ))}
+        </dl>
 
         <div className="flex flex-col sm:flex-row items-center gap-5 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
           <Link
@@ -237,6 +262,82 @@ export const DoorsWindows: React.FC = () => {
     </section>
 
     {/* ================================================================
+        PHILOSOPHY — the three brand values from the brand brief.
+        ================================================================ */}
+    <section className="bg-[#121212] py-20 px-6 md:px-12">
+      <div className="max-w-7xl mx-auto">
+        <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+          Philosophy
+        </span>
+        <h2 className="text-3xl md:text-5xl font-serif font-light text-white leading-tight mb-12">
+          Less frame. <span className="italic font-normal text-[#C5A059]">More architecture.</span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#2A2A2A]">
+          {dwPillars.map((p, i) => (
+            <div key={p.title} className="bg-[#121212] p-8 reveal-on-scroll">
+              <span className="text-[10px] font-mono text-[#C5A059] block mb-4">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="text-xl font-serif font-light text-white mb-3">{p.title}</h3>
+              <p className="text-sm text-[#C4B9A8] font-light leading-relaxed">{p.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ================================================================
+        PRODUCT FAMILIES — the four families named in the brand brief,
+        each linking to the catalogue systems that belong to it.
+        ================================================================ */}
+    <section className="border-t border-[#EBE8E2] py-20 px-6 md:px-12">
+      <div className="max-w-7xl mx-auto">
+        <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+          The Range
+        </span>
+        <h2 className="text-3xl md:text-5xl font-serif font-light text-[#121212] leading-tight mb-12">
+          Four families, <span className="italic font-normal">one standard</span>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dwProductFamilies.map((f) => {
+            const links = f.systemIds
+              .map((id) => getCategoryMeta(id))
+              .filter((m): m is DWCategoryMeta => !!m)
+              .filter((m) => m.isPopulated || getCategoryPhotos(m.id).length > 0);
+            return (
+              <div key={f.title} className="bg-white border border-[#EBE8E2] p-6 flex flex-col">
+                <div className="w-6 h-[2px] mb-5" style={{ backgroundColor: DW_ACCENT }} />
+                <h3 className="text-lg font-serif font-light text-[#121212] mb-2">{f.title}</h3>
+                <p className="text-xs text-[#6B6B6B] font-light leading-relaxed flex-grow">{f.body}</p>
+                <div className="mt-5 pt-4 border-t border-[#EBE8E2]">
+                  {links.length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {links.map((m) => (
+                        <li key={m.id}>
+                          <Link
+                            to={`/doors-windows/${m.id}`}
+                            className="text-[11px] text-[#121212] hover:text-[#C5A059] transition-colors inline-flex items-center gap-1.5"
+                          >
+                            {m.name} <ArrowRight size={10} />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <Link
+                      to="/contact?source=doors-windows"
+                      className="text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-[#C5A059] inline-flex items-center gap-1.5"
+                    >
+                      Enquire <ArrowRight size={10} />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    {/* ================================================================
         CATEGORY GRID — 6 populated systems + 6 categories pending
         full client specification.
         ================================================================ */}
@@ -257,6 +358,30 @@ export const DoorsWindows: React.FC = () => {
           .map((cat, i) => (
           <CategoryCard key={cat.id} cat={cat} index={i} />
         ))}
+      </div>
+    </section>
+
+    {/* ================================================================
+        PERFORMANCE — acoustic, thermal and wind load, per the brand brief.
+        Figures come from the catalogue data in doorsWindows.ts.
+        ================================================================ */}
+    <section className="border-t border-[#EBE8E2] bg-[#121212] py-20 px-6 md:px-12">
+      <div className="max-w-7xl mx-auto">
+        <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+          Technical Performance
+        </span>
+        <h2 className="text-3xl md:text-5xl font-serif font-light text-white leading-tight mb-12">
+          Quiet, temperate, <span className="italic font-normal text-[#C5A059]">unmoved.</span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#2A2A2A]">
+          {dwPerformanceHighlights.map((h) => (
+            <div key={h.title} className="bg-[#121212] p-8">
+              <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-[#C4B9A8] block mb-4">{h.title}</span>
+              <p className="text-2xl md:text-3xl font-serif font-light text-[#C5A059] mb-4">{h.figure}</p>
+              <p className="text-sm text-[#C4B9A8] font-light leading-relaxed">{h.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
 
@@ -287,6 +412,35 @@ export const DoorsWindows: React.FC = () => {
         />
       </div>
     </section>
+
+    {/* ================================================================
+        PROJECT GALLERY — hidden until curated, retouched photos exist.
+        ================================================================ */}
+    {dwProjectGallery.length > 0 && (
+      <section className="border-t border-[#EBE8E2] py-20 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+            Project Gallery
+          </span>
+          <h2 className="text-2xl md:text-3xl font-serif font-light text-[#121212] mb-10">Recent Installations</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dwProjectGallery.map((g) => (
+              <figure key={g.src} className="bg-white border border-[#EBE8E2]">
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    {...responsiveImg(g.src, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw", 800)}
+                    alt={g.caption}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <figcaption className="px-5 py-4 text-xs text-[#6B6B6B] font-light">{g.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
     {/* ================================================================
         MATERIAL COMPARISON — Aluminium vs Wood vs UPVC
@@ -434,6 +588,26 @@ export const DoorsWindows: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+
+    {/* ================================================================
+        CLOSING CTA
+        ================================================================ */}
+    <section className="bg-[#121212] py-20 px-6 md:px-12 text-center">
+      <div className="max-w-3xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-serif font-light text-white leading-snug mb-6">
+          Specify your next opening with <span className="italic text-[#C5A059]">Madio</span>.
+        </h2>
+        <p className="text-sm text-[#C4B9A8] font-light leading-relaxed mb-10">
+          Site assessment, system recommendation and technical drawings for architects, builders and homeowners.
+        </p>
+        <Link
+          to="/contact?source=doors-windows"
+          className="inline-block px-10 py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium bg-[#C5A059] text-white hover:bg-white hover:text-[#121212] transition-all duration-300"
+        >
+          Request a Consultation
+        </Link>
       </div>
     </section>
 

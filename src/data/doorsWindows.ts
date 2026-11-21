@@ -17,6 +17,8 @@
 //      "10 Years", stored per-system and hasValue()-gated in the UI — never
 //      hardcoded as a single banner claim — so individual systems can be
 //      corrected independently once the client confirms further.
+//      The figure lives in DW_WARRANTY below, so a confirmed change is a
+//      one-line edit that flows to every system and the standards table.
 //
 // Every other spec below (dimensions, track widths, wind load, glass
 // thickness, load capacity, locking systems, material comparison, typologies,
@@ -58,6 +60,9 @@ export const dwCategories: DWCategoryMeta[] = [
 
 export const isDWCategoryId = (s: string): boolean =>
   isStaticDWCategoryId(s) || dynamicDoorsWindowsCategories.some((dc) => dc.id === s);
+
+// Confirmed warranty figure, per system. See correction note 2 above.
+export const DW_WARRANTY = "10 Years";
 
 // --------------- Product (populated systems) types ---------------
 
@@ -167,7 +172,7 @@ export const dwSystems: DWSystem[] = [
       netOption: "Pleated Net",
       loadCapacity: "300 kg",
       windLoad: "2.8 KPA",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "Large panoramic openings, penthouse glazing, premium residential projects.",
     images: dwImg("hl-vista-slim"),
@@ -192,7 +197,7 @@ export const dwSystems: DWSystem[] = [
       maxHeight: "2500 mm",
       maxWidth: "1350 mm",
       lockingSystem: "Multi-locking / Single Locking",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "Entry doors, French doors, bedroom and bathroom openings.",
     images: dwImg("hl-50-casement-door"),
@@ -221,7 +226,7 @@ export const dwSystems: DWSystem[] = [
       netOption: "Shutter Net / Pleated Net",
       loadCapacity: "120 kg",
       windLoad: "1.8 KPA",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "Mid-size residential openings, balconies, apartment projects.",
     images: dwImg("hl-retro-gulf-slim"),
@@ -250,7 +255,7 @@ export const dwSystems: DWSystem[] = [
       netOption: "Pleated Net",
       loadCapacity: "250 kg",
       windLoad: "2.0 KPA",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "Luxury villas, designer residences, minimalist architectural projects.",
     images: dwImg("hl-ultra-slim"),
@@ -279,7 +284,7 @@ export const dwSystems: DWSystem[] = [
       netOption: "Shutter Net / Pleated Net",
       loadCapacity: "80 kg",
       windLoad: "0.8 KPA",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "Budget-conscious residential projects, compact apartments, internal partitions.",
     images: dwImg("hl-eco-gulf-slim"),
@@ -308,7 +313,7 @@ export const dwSystems: DWSystem[] = [
       netOption: "Shutter Net / Pleated Net",
       loadCapacity: "250 kg",
       windLoad: "2.8 KPA",
-      warranty: "10 Years",
+      warranty: DW_WARRANTY,
     },
     bestFor: "High-rise buildings, commercial facades, large-span commercial openings.",
     images: dwImg("hl-elite-gulf-slim"),
@@ -411,9 +416,100 @@ export const performanceStandards = [
   { standard: "Hardware Origin", specification: "Imported European Hardware" },
   { standard: "Aluminium Grade", specification: "6063-T5 Architectural Grade" },
   { standard: "Powder Coating", specification: "QUALICOAT Certified" },
-  { standard: "Warranty", specification: "10 Years" },
+  { standard: "Warranty", specification: `${DW_WARRANTY} per system` },
   { standard: "Glass Compatibility", specification: "Single, DGU, and Laminated" },
 ];
+
+// --------------- Brand brief content ---------------
+// Brand values and lead messages come from the client's brand brief
+// (2026-11). Copy below only restates facts that already exist in this file
+// (catalogue data) — no new specs, product names or testimonials.
+
+export const dwPillars = [
+  {
+    title: "Precision Engineering",
+    body:
+      "Every system is custom-engineered to Madio's specification in 6063-T5 architectural-grade aluminium, fitted with imported European hardware and multi-point locking.",
+  },
+  {
+    title: "Minimalist Aesthetics",
+    body:
+      "Ultra-slim profiles, with interlocks as narrow as 17 mm, give the glass the room. Frames recede so that light, view and architecture lead.",
+  },
+  {
+    title: "Sustainable Luxury",
+    body:
+      "Aluminium is 100% recyclable without loss of quality, and thermal-break technology limits heat transfer. Luxury that is built to last decades, not seasons.",
+  },
+];
+
+// Derived from dwSystems so the range can never drift from the spec data.
+const kpaValues = dwSystems
+  .map((s) => parseFloat(s.specs.windLoad ?? ""))
+  .filter((n) => !Number.isNaN(n));
+const interlockValues = dwSystems
+  .map((s) => parseFloat(s.specs.interlock ?? ""))
+  .filter((n) => !Number.isNaN(n));
+export const dwWindLoadRange = `${Math.min(...kpaValues)} – ${Math.max(...kpaValues)} kPa`;
+export const dwMinInterlock = `${Math.min(...interlockValues)} mm`;
+
+export const dwPerformanceHighlights = [
+  {
+    title: "Acoustic",
+    figure: "Up to 38 dB",
+    body: "Sound reduction achieved when the system is paired with appropriate glazing, with acoustic seals on every sash.",
+  },
+  {
+    title: "Thermal",
+    figure: "Thermal break",
+    body: "Thermal-break technology minimises heat transfer through the frame, and every system accepts single, DGU or laminated glass.",
+  },
+  {
+    title: "Wind Load",
+    figure: dwWindLoadRange,
+    body: "Rated wind-load resistance across the range, up to 2.8 kPa on the Vista Slim and Elite Gulf Slim for high-rise and coastal sites.",
+  },
+];
+
+// The four product families named in the brand brief. Each links to the
+// catalogue entries that belong to it. Families whose systems have no
+// confirmed specs or photos yet say so instead of inventing detail.
+export const dwProductFamilies: {
+  title: string;
+  body: string;
+  systemIds: DWCategoryId[];
+}[] = [
+  {
+    title: "Slim Sliding Systems",
+    body: "Large-format sliding doors and windows with slim sightlines, in 2-track and 3-track configurations.",
+    systemIds: ["hl-vista-slim", "hl-ultra-slim", "hl-elite-gulf-slim", "hl-retro-gulf-slim", "hl-eco-gulf-slim"],
+  },
+  {
+    title: "Casement Doors & Windows",
+    body: "Wide-swinging openable systems with continuous weather gaskets and single or multi-point locking.",
+    systemIds: ["hl-50-casement-door", "casement-windows-openable"],
+  },
+  {
+    title: "Glass Partitions",
+    body: "Glass partition and door systems in 12 mm glass for open-plan residential and commercial interiors.",
+    systemIds: ["glass-partitions-doors"],
+  },
+  {
+    title: "Motorised Integrated Blinds",
+    body: "Motorised blinds integrated into the window system. Specifications are shared on request.",
+    systemIds: ["motorised-integrated-blinds"],
+  },
+];
+
+// Project gallery — curated, retouched site photography only. Empty until the
+// client supplies the finished images; the section is hidden while empty.
+// Raw site shots (debris, stickers, reflections) must not be added here.
+export interface DWGalleryItem {
+  src: string;
+  caption: string;
+  systemId?: DWCategoryId;
+}
+export const dwProjectGallery: DWGalleryItem[] = [];
 
 // --------------- Helpers ---------------
 
