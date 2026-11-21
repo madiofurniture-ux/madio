@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, Sparkles, ChevronDown, MapPin, Phone, Clock, 
 import { furnitureCategories, getProductsByCategory } from "../data/furniture";
 import type { FurnitureCategoryMeta } from "../data/furniture";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { responsiveImg } from "../lib/image";
 import heroImg from "../assets/furniture/home-hero.jpeg";
 
 const VERTICALS = [
@@ -32,8 +33,12 @@ const VERTICALS = [
 
 // First available real product photo for a category, or undefined if the
 // category has no clean photography yet (renders the placeholder instead).
-const categoryThumbnail = (categoryId: FurnitureCategoryMeta["id"]): string | undefined =>
-  getProductsByCategory(categoryId).find((p) => p.images.length > 0)?.images[0];
+// For a category pulled back from the static catalogue (isPopulated false),
+// only client-uploaded photos count — same rule as FurnitureCategoryPage.
+const categoryThumbnail = (cat: FurnitureCategoryMeta): string | undefined =>
+  getProductsByCategory(cat.id).find(
+    (p) => p.images.length > 0 && (cat.isPopulated || p.isClientUploaded),
+  )?.images[0];
 
 const FURNITURE_ACCENT = "#C5A059";
 
@@ -58,7 +63,7 @@ const CategoryCard: React.FC<{ cat: FurnitureCategoryMeta; index: number }> = ({
   cat,
   index,
 }) => {
-  const thumbnail = cat.isPopulated ? categoryThumbnail(cat.id) : undefined;
+  const thumbnail = categoryThumbnail(cat);
 
   return (
   <Link
@@ -73,7 +78,7 @@ const CategoryCard: React.FC<{ cat: FurnitureCategoryMeta; index: number }> = ({
     >
       {thumbnail ? (
         <img
-          src={thumbnail}
+          {...responsiveImg(thumbnail, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw", 600)}
           alt={cat.name}
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -142,6 +147,7 @@ export const FurnitureLanding: React.FC = () => {
         <img
           src={heroImg}
           alt="Madio Furniture — living room showroom"
+          fetchPriority="high"
           className="w-full h-full object-cover brightness-[0.75] contrast-[1.05]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212]/70 via-transparent to-[#121212]/35" />
@@ -242,8 +248,10 @@ export const FurnitureLanding: React.FC = () => {
 
       {/* 3-column grid on desktop, 2 on tablet, 1 on mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Categories with no photography yet are hidden rather than shown as
+            "Coming Soon" tiles — they reappear automatically once photos exist. */}
         {furnitureCategories
-          .filter((cat) => cat.id !== "bar-chairs")
+          .filter((cat) => cat.id !== "bar-chairs" && !!categoryThumbnail(cat))
           .map((cat, i) => (
             <CategoryCard key={cat.id} cat={cat} index={i} />
           ))}

@@ -7,8 +7,10 @@ import {
   getProductById,
   isFurnitureCategoryId,
 } from "../data/furniture";
-import type { FurnitureProductSpec } from "../data/furniture";
+import type { FurnitureProduct, FurnitureProductSpec } from "../data/furniture";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { responsiveImg, cld } from "../lib/image";
+import { absoluteUrl, breadcrumbJsonLd } from "../lib/seo";
 
 const FURNITURE_ACCENT = "#C5A059";
 
@@ -27,13 +29,53 @@ const SPEC_LABELS: Partial<Record<keyof FurnitureProductSpec, string>> = {
   warranty:       "Warranty",
 };
 
+// Most catalogue products don't have names yet (name === SKU), so add the
+// category for a title that means something in search results.
+function productTitle(product: FurnitureProduct): string {
+  if (product.name !== product.sku) return product.name;
+  const cat = furnitureCategories.find((c) => c.id === product.category);
+  return cat ? `${cat.name} ${product.sku}` : product.sku;
+}
+
+// Share image + structured data (Product, BreadcrumbList) for a product page.
+function productMeta(product: FurnitureProduct) {
+  const categoryMeta = furnitureCategories.find((c) => c.id === product.category);
+  const path = `/furniture/${product.category}/${product.id}`;
+  const image = cld(product.images[0], 1200);
+  return {
+    image,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        sku: product.sku,
+        url: absoluteUrl(path),
+        ...(image ? { image: absoluteUrl(image) } : {}),
+        ...(product.description ? { description: product.description } : {}),
+        ...(categoryMeta ? { category: categoryMeta.name } : {}),
+        brand: { "@type": "Brand", name: "Madio Furniture" },
+      },
+      breadcrumbJsonLd([
+        { name: "Madio Furniture", path: "/" },
+        ...(categoryMeta ? [{ name: categoryMeta.name, path: `/furniture/${categoryMeta.id}` }] : []),
+        { name: product.name, path },
+      ]),
+    ],
+  };
+}
+
 export const FurnitureProductDetail: React.FC = () => {
   const { category, productId } = useParams<{ category: string; productId: string }>();
   const previewProduct = productId ? getProductById(productId) : undefined;
 
   usePageMeta(
-    previewProduct ? `${previewProduct.name} | Madio Furniture` : "Madio Furniture",
-    previewProduct?.description || "Madio Furniture — design-led furniture for residential and hospitality interiors."
+    previewProduct ? `${productTitle(previewProduct)} | Madio Furniture` : "Madio Furniture",
+    previewProduct?.description ||
+      (previewProduct
+        ? `${productTitle(previewProduct)} from Madio Furniture, Hyderabad — design-led furniture for residential and hospitality interiors. Enquire for sizes, finishes and pricing.`
+        : "Madio Furniture — design-led furniture for residential and hospitality interiors."),
+    previewProduct ? productMeta(previewProduct) : undefined
   );
 
   // Validate route params
@@ -115,7 +157,7 @@ export const FurnitureProductDetail: React.FC = () => {
           >
             {product.images[0] ? (
               <img
-                src={product.images[0]}
+                {...responsiveImg(product.images[0], "(min-width: 1024px) 50vw, 100vw", 1000)}
                 alt={product.name}
                 className="w-full h-full object-contain"
                 loading="lazy"

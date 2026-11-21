@@ -8,6 +8,8 @@ import {
 } from "../data/furniture";
 import type { FurnitureProduct } from "../data/furniture";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { responsiveImg, cld } from "../lib/image";
+import { breadcrumbJsonLd } from "../lib/seo";
 
 const FURNITURE_ACCENT = "#C5A059";
 
@@ -29,7 +31,7 @@ const ProductCard: React.FC<{ product: FurnitureProduct; categoryId: string }> =
     >
       {imgSrc ? (
         <img
-          src={imgSrc}
+          {...responsiveImg(imgSrc, "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw", 500)}
           alt={product.name}
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -113,7 +115,18 @@ export const FurnitureCategoryPage: React.FC = () => {
 
   usePageMeta(
     previewMeta ? `${previewMeta.name} | Madio Furniture` : "Madio Furniture",
-    previewMeta?.description ?? "Madio Furniture — design-led furniture for residential and hospitality interiors."
+    previewMeta?.description ?? "Madio Furniture — design-led furniture for residential and hospitality interiors.",
+    previewMeta
+      ? {
+          image: cld(getProductsByCategory(previewMeta.id).find((p) => p.images.length > 0)?.images[0], 1200),
+          jsonLd: [
+            breadcrumbJsonLd([
+              { name: "Madio Furniture", path: "/" },
+              { name: previewMeta.name, path: `/furniture/${previewMeta.id}` },
+            ]),
+          ],
+        }
+      : undefined
   );
 
   // Unknown slug → redirect to landing
