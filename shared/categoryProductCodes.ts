@@ -44,6 +44,7 @@ export const doorsWindowsProductCodeConfig: Record<DoorsWindowsCategoryId, Categ
   "glass-partitions-doors": { prefix: "MDW-GP", baselineMax: 0 },
   "casement-windows-openable": { prefix: "MDW-CW", baselineMax: 0 },
   "sliding-folding-bifold": { prefix: "MDW-SF", baselineMax: 0 },
+  "motorised-integrated-blinds": { prefix: "MDW-MB", baselineMax: 0 },
 };
 
 // "MFB-053" + prefix "MFB" -> 53. Returns null for anything that doesn't
