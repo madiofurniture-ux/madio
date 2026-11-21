@@ -10,6 +10,7 @@ import {
 } from "../data/doorsWindows";
 import type { DWCategoryPhoto, DWSystemSpec } from "../data/doorsWindows";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { responsiveImg } from "../lib/image";
 
 const DW_ACCENT = "#C5A059";
 
@@ -48,7 +49,7 @@ const ComingSoonState: React.FC<{
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-14 text-left">
         {photos.map((p) => (
           <div key={p.productCode} className="relative aspect-square overflow-hidden bg-[#EBE8E2] border border-[#EBE8E2]">
-            <img src={p.secureUrl} alt={p.productCode} loading="lazy" className="w-full h-full object-cover" />
+            <img {...responsiveImg(p.secureUrl, "(min-width: 1024px) 33vw, 50vw", 600)} alt={p.productCode} loading="lazy" className="w-full h-full object-cover" />
             <span className="absolute bottom-2 left-2 text-[8px] font-mono text-white bg-black/50 px-1.5 py-0.5 tracking-wider">
               {p.productCode}
             </span>

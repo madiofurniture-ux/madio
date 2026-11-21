@@ -14,6 +14,7 @@ import {
 } from "../data/doorsWindows";
 import type { DWCategoryMeta } from "../data/doorsWindows";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { responsiveImg } from "../lib/image";
 
 const DW_ACCENT = "#C5A059";
 
@@ -65,7 +66,7 @@ const CategoryCard: React.FC<{ cat: DWCategoryMeta; index: number }> = ({ cat, i
       <div className="relative h-52 overflow-hidden shrink-0" style={{ backgroundColor: "#EBE8E2" }}>
         {thumbnail ? (
           <img
-            src={thumbnail}
+            {...responsiveImg(thumbnail, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw", 600)}
             alt={cat.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -250,7 +251,10 @@ export const DoorsWindows: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {dwCategories.map((cat, i) => (
+        {/* Systems with neither confirmed specs nor photos are hidden until they have content. */}
+        {dwCategories
+          .filter((cat) => cat.isPopulated || getCategoryPhotos(cat.id).length > 0)
+          .map((cat, i) => (
           <CategoryCard key={cat.id} cat={cat} index={i} />
         ))}
       </div>
