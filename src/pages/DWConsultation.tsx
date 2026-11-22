@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle, Mail, MessageCircle, Plus, Send, Trash2 } from "lucide-react";
 import { dwSystems, getCategoryMeta, windowDoorTypologies } from "../data/doorsWindows";
@@ -14,6 +14,8 @@ import {
   openingSft,
 } from "../data/dwArchitect";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { newSubmissionId, submitLead } from "../lib/submitLead";
+import { HoneypotField } from "../components/HoneypotField";
 import { breadcrumbJsonLd } from "../lib/seo";
 import { DWPageHero } from "../components/dw/DWUI";
 
@@ -120,7 +122,10 @@ export const DWConsultation: React.FC = () => {
   });
   const [interests, setInterests] = useState<string[]>([...new Set(initialInterests)]);
   const [rows, setRows] = useState<OpeningRow[]>([]);
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [fixError, setFixError] = useState("");
+  const [trap, setTrap] = useState("");
+  const submissionId = useRef("");
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -164,45 +169,37 @@ export const DWConsultation: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const apiUrl = import.meta.env.VITE_GOOGLE_SHEETS_API_URL as string | undefined;
-    if (!apiUrl || apiUrl.includes("YOUR_COPIED_APPS_SCRIPT_URL_HERE")) {
-      // No lead endpoint configured: never pretend it was sent. Offer email
-      // and WhatsApp with the full brief instead.
-      setStatus("fallback");
-      return;
-    }
     setStatus("sending");
-    try {
-      // Same Google Apps Script endpoint and core fields as the main contact
-      // form (name, email, subject, interestedIn, message), plus the project
-      // fields individually for the sheet.
-      const body = new URLSearchParams({
+    setFixError("");
+    // One id per filled-in brief, so a retry is saved once.
+    submissionId.current ||= newSubmissionId();
+    const result = await submitLead(
+      {
         name: form.name,
-        email: form.email,
-        subject: "Doors & Windows Project Consultation",
-        interestedIn: "Doors & Windows",
-        message: brief,
         phone: form.phone,
+        email: form.email,
         role: form.role,
-        projectLocation: form.location,
-        projectType: form.projectType,
-        projectStage: form.stage,
-        productInterest: interests.join(", "),
+        location: form.location,
+        division: "Doors & Windows",
+        interest: interests.join(", "),
+        project_type: form.projectType,
+        project_stage: form.stage,
         openings: form.openings,
         timeline: form.timeline,
-        openingScheduleSft: totalSft ? fmtSft(totalSft) : "",
-        source: "doors-windows-consultation",
-      });
-      await fetch(apiUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
-      setStatus("sent");
-    } catch {
-      setStatus("error");
-    }
+        // The full brief, including the opening schedule, so the CRM note has everything.
+        message: brief,
+        form: "doors-windows-consultation",
+        subject: "Doors & Windows Project Consultation",
+        interestedIn: "Doors & Windows",
+        company_website: trap,
+      },
+      submissionId.current,
+    );
+    if (result.status === "ok") setStatus("sent");
+    else if (result.status === "fixable") {
+      setFixError(result.error);
+      setStatus("idle");
+    } else setStatus("error");
   };
 
   const mailto = `mailto:${DW_EMAIL}?subject=${encodeURIComponent("Project brief: Madio Doors & Windows")}&body=${encodeURIComponent(brief)}`;
@@ -260,13 +257,11 @@ export const DWConsultation: React.FC = () => {
                   The Madio Doors & Windows team will contact you. If you have drawings, email them to {DW_EMAIL} with your name in the subject.
                 </p>
               </div>
-            ) : status === "fallback" || status === "error" ? (
+            ) : status === "error" ? (
               <div className="py-10" role="alert">
                 <h2 className="text-2xl font-serif font-light text-[#121212] mb-3">Send your brief by email or WhatsApp</h2>
                 <p className="text-sm text-[#6B6B6B] font-light leading-relaxed mb-8 max-w-xl">
-                  {status === "error"
-                    ? "We could not send the form just now. Your brief is ready below; send it by email or WhatsApp and nothing is lost."
-                    : "Online submission is not available right now. Your brief is ready below; send it by email or WhatsApp and nothing is lost."}
+                  We could not send the form just now. Your brief is ready below; send it by email or WhatsApp and nothing is lost.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <a href={mailto} className="inline-flex items-center justify-center gap-2 px-8 py-4 text-xs uppercase tracking-[0.25em] font-sans font-medium bg-[#C5A059] text-white hover:bg-[#121212] transition-colors">
@@ -409,6 +404,12 @@ export const DWConsultation: React.FC = () => {
                   />
                 </Field>
 
+                <HoneypotField id="company-website" value={trap} onChange={setTrap} />
+                {fixError && (
+                  <p role="alert" className="text-xs text-[#9B2C2C] font-light">
+                    {fixError}
+                  </p>
+                )}
                 <button
                   type="submit"
                   disabled={status === "sending"}

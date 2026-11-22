@@ -1,7 +1,16 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Phone, Mail, MapPin, MessageCircle, Send, CheckCircle, Sparkles, ChevronDown } from "lucide-react";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { newSubmissionId, submitLead } from "../lib/submitLead";
+import { HoneypotField } from "../components/HoneypotField";
+
+// The form's "Interested in" choices, as the CRM's divisions ("General" goes to every division).
+const DIVISION_OF_INTEREST: Record<string, string> = {
+  Furniture: "Furniture",
+  "MAP Finishes": "MAP",
+  "Doors & Windows": "Doors & Windows",
+};
 
 export const Contact: React.FC = () => {
   usePageMeta(
@@ -41,6 +50,7 @@ export const Contact: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     email: "",
     subject: "Architectural Consultation",
     interestedIn: defaultInterest,
@@ -50,6 +60,8 @@ export const Contact: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [trap, setTrap] = useState("");
+  const submissionId = useRef("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -62,37 +74,33 @@ export const Contact: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
-
-    const apiUrl = import.meta.env.VITE_GOOGLE_SHEETS_API_URL;
-    if (!apiUrl || apiUrl.includes("YOUR_COPIED_APPS_SCRIPT_URL_HERE")) {
-      console.warn("Google Sheets API URL is not configured in .env file.");
-      // Fallback: simulate success for testing
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setIsSubmitted(true);
-      }, 1000);
-      return;
-    }
-
-    try {
-      // Use no-cors mode to send standard url-encoded form values.
-      // This is the most reliable way to POST to Google Apps Script web apps without CORS issues.
-      const searchParams = new URLSearchParams(formData);
-      await fetch(apiUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: searchParams.toString(),
-      });
-
-      setIsSubmitting(false);
+    // One id per filled-in form, so a retry is saved once.
+    submissionId.current ||= newSubmissionId();
+    const result = await submitLead(
+      {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        division: DIVISION_OF_INTEREST[formData.interestedIn] || "",
+        interest: formData.subject,
+        message: formData.message,
+        form: sourceParam ? `contact (${sourceParam})` : "contact",
+        subject: formData.subject,
+        interestedIn: formData.interestedIn,
+        company_website: trap,
+      },
+      submissionId.current,
+    );
+    setIsSubmitting(false);
+    if (result.status === "ok") {
+      submissionId.current = "";
       setIsSubmitted(true);
-    } catch (err: any) {
-      console.error("Failed to submit contact form:", err);
-      setSubmitError("We were unable to transmit your message. Please check your network connection and try again.");
-      setIsSubmitting(false);
+    } else if (result.status === "fixable") {
+      setSubmitError(result.error);
+    } else {
+      setSubmitError(
+        "We could not send your message just now. Please try again in a moment, or call or WhatsApp us using the details on this page.",
+      );
     }
   };
 
@@ -292,6 +300,26 @@ export const Contact: React.FC = () => {
                   />
                 </div>
 
+                {/* Mobile */}
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="phone" className="text-[10px] uppercase tracking-wider text-[#6B6B6B] font-sans font-semibold">
+                    Mobile Number *
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    required
+                    autoComplete="tel"
+                    inputMode="tel"
+                    pattern="[0-9+\-\s]{10,16}"
+                    title="Enter a 10-digit mobile number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="border border-[#EBE8E2] px-4 py-3 text-sm focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] bg-[#F4F1EA] rounded-[4px] transition-colors duration-300 font-light text-[#121212] placeholder-[#6B6B6B]/60 focus:bg-white"
+                  />
+                </div>
+
                 {/* Email */}
                 <div className="flex flex-col space-y-2">
                   <label htmlFor="email" className="text-[10px] uppercase tracking-wider text-[#6B6B6B] font-sans font-semibold">
@@ -363,6 +391,8 @@ export const Contact: React.FC = () => {
                     className="border border-[#EBE8E2] px-4 py-3 text-sm focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] bg-[#F4F1EA] rounded-[4px] transition-colors duration-300 font-light text-[#121212] placeholder-[#6B6B6B]/60 focus:bg-white resize-none"
                   />
                 </div>
+
+                <HoneypotField id="company-website" value={trap} onChange={setTrap} />
 
                 {/* Submit button */}
                 <button

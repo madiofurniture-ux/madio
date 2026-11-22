@@ -18,7 +18,7 @@
 //
 // The page is noindex: it exists for ad traffic and would otherwise compete
 // with /doors-windows in search.
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle, ChevronDown, Download, Mail, MessageCircle, Phone, Send } from "lucide-react";
 import {
@@ -46,6 +46,8 @@ import {
   dwWhatsAppLink,
 } from "../data/dwArchitect";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { newSubmissionId, submitLead } from "../lib/submitLead";
+import { HoneypotField } from "../components/HoneypotField";
 import { Eyebrow, Hatch } from "../components/dw/DWUI";
 
 const PHONE_DISPLAY = "+91 99486 01899";
@@ -56,10 +58,6 @@ const WA_TEXT = "Hello Madio Doors and Windows, I saw your page and would like a
 const dwLogo = dwAsset("dw-logo");
 const warrantyLabel = DW_WARRANTY.replace(" Years", "-year");
 const openingTypesPdf = dwResources.find((r) => r.id === "configuration-diagrams" && r.file);
-
-// Ad-click parameters carried into the lead, so each enquiry can be traced
-// back to its campaign and keyword in the sheet.
-const TRACKING_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid"] as const;
 
 type Tracker = { dataLayer?: object[]; gtag?: (...args: unknown[]) => void };
 /** Fires a conversion-style event if a Google tag / GTM is on the page; a no-op otherwise. */
@@ -189,7 +187,10 @@ const EnquiryForm: React.FC<{
   onRequirement: (v: string) => void;
 }> = ({ idPrefix, placement, requirement, onRequirement }) => {
   const [form, setForm] = useState({ name: "", phone: "", location: "", stage: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [fixError, setFixError] = useState("");
+  const [trap, setTrap] = useState("");
+  const submissionId = useRef("");
   const id = (f: string) => `${idPrefix}-${f}`;
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -205,47 +206,33 @@ const EnquiryForm: React.FC<{
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const apiUrl = import.meta.env.VITE_GOOGLE_SHEETS_API_URL as string | undefined;
-    if (!apiUrl || apiUrl.includes("YOUR_COPIED_APPS_SCRIPT_URL_HERE")) {
-      // No lead endpoint configured: never pretend it was sent.
-      setStatus("fallback");
-      return;
-    }
     setStatus("sending");
-    // Read at submit time: the ad-click parameters are on the landing URL.
-    const params = new URLSearchParams(window.location.search);
-    const tracking: Record<string, string> = {};
-    TRACKING_KEYS.forEach((k) => {
-      const v = params.get(k);
-      if (v) tracking[k] = v.slice(0, 200);
-    });
-    try {
-      // Same Apps Script endpoint and core fields as the consultation form,
-      // plus the ad-click parameters for campaign attribution.
-      const body = new URLSearchParams({
+    setFixError("");
+    // One id per filled-in form, so a retry is saved once.
+    submissionId.current ||= newSubmissionId();
+    const result = await submitLead(
+      {
         name: form.name,
-        email: "",
+        phone: form.phone,
+        location: form.location,
+        division: "Doors & Windows",
+        interest: requirement,
+        project_stage: form.stage,
+        form: `ads-landing ${placement}`,
         subject: "Doors & Windows Enquiry (Ads landing page)",
         interestedIn: "Doors & Windows",
-        message: [brief, `Form: ${placement}`, ...Object.entries(tracking).map(([k, v]) => `${k}: ${v}`)].join("\n"),
-        phone: form.phone,
-        projectLocation: form.location,
-        productInterest: requirement,
-        projectStage: form.stage,
-        source: LEAD_SOURCE,
-        landingPage: window.location.pathname,
-        formPlacement: placement,
-        ...tracking,
-      });
-      await fetch(apiUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
+        message: brief,
+        company_website: trap,
+      },
+      submissionId.current,
+    );
+    if (result.status === "ok") {
       setStatus("sent");
       track("generate_lead", { form: LEAD_SOURCE, placement, requirement: requirement || "Not specified" });
-    } catch {
+    } else if (result.status === "fixable") {
+      setFixError(result.error);
+      setStatus("idle");
+    } else {
       setStatus("error");
     }
   };
@@ -271,12 +258,12 @@ const EnquiryForm: React.FC<{
     );
   }
 
-  if (status === "fallback" || status === "error") {
+  if (status === "error") {
     return (
       <div className="py-2" role="alert">
         <h3 className="text-xl font-serif font-light text-[#121212] mb-3">Send your enquiry on WhatsApp or email</h3>
         <p className="text-sm text-[#6B6B6B] font-light leading-relaxed mb-6">
-          {status === "error" ? "We could not send the form just now." : "Online submission is not available right now."} Your details are ready below, so nothing is lost.
+          We could not send the form just now. Your details are ready below, so nothing is lost.
         </p>
         <div className="flex flex-col gap-3 mb-5">
           <a
@@ -350,6 +337,12 @@ const EnquiryForm: React.FC<{
           </select>
         </div>
       </div>
+      <HoneypotField id={id("company-website")} value={trap} onChange={setTrap} />
+      {fixError && (
+        <p role="alert" className="text-xs text-[#9B2C2C] font-light">
+          {fixError}
+        </p>
+      )}
       <button
         type="submit"
         disabled={status === "sending"}
