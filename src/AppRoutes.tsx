@@ -21,6 +21,7 @@ const DWArchitects = page(() => import("./pages/DWArchitects"), "DWArchitects");
 const DWResources = page(() => import("./pages/DWResources"), "DWResources");
 const DWProjects = page(() => import("./pages/DWProjects"), "DWProjects");
 const DWConsultation = page(() => import("./pages/DWConsultation"), "DWConsultation");
+const DWAdLanding = page(() => import("./pages/DWAdLanding"), "DWAdLanding");
 const Home = page(() => import("./pages/Home"), "Home");
 const About = page(() => import("./pages/About"), "About");
 const Products = page(() => import("./pages/Products"), "Products");
@@ -36,6 +37,10 @@ export const AppRoutes: React.FC = () => (
       {/* Admin tool — deliberately outside MadioLayout (no public header/nav/footer)
           and not linked from anywhere in the site. Password-gated in the page itself. */}
       <Route path="admin/upload" element={<AdminUpload />} />
+
+      {/* Paid-ads landing page — also outside MadioLayout: no site nav, one
+          conversion goal. noindex, so it doesn't compete with /doors-windows. */}
+      <Route path="lp/doors-windows" element={<DWAdLanding />} />
 
       {/* All pages share the unified MadioLayout which includes the vertical switcher header */}
       <Route element={<MadioLayout />}>
