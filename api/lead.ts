@@ -20,7 +20,7 @@ const FIELDS = [
 ] as const;
 const TRACKING = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid"] as const;
 // Sheet-only columns some forms already send (kept so the sheet's existing columns stay filled).
-const SHEET_EXTRA = ["subject", "interestedIn"] as const;
+const SHEET_EXTRA = ["subject", "interestedIn", "openingScheduleSft"] as const;
 
 type Lead = Record<string, string> & { tracking?: Record<string, string> };
 
@@ -85,6 +85,7 @@ async function toSheet(lead: Lead): Promise<Outcome> {
     projectLocation: fields.location || "",
     productInterest: fields.interest || "",
     projectStage: fields.project_stage || "",
+    projectType: fields.project_type || "",
     source: fields.form || "website",
     landingPage: fields.page || "",
     ...tracking,

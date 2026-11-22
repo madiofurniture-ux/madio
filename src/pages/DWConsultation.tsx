@@ -191,6 +191,7 @@ export const DWConsultation: React.FC = () => {
         form: "doors-windows-consultation",
         subject: "Doors & Windows Project Consultation",
         interestedIn: "Doors & Windows",
+        openingScheduleSft: totalSft ? fmtSft(totalSft) : "",
         company_website: trap,
       },
       submissionId.current,

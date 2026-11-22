@@ -22,6 +22,7 @@ export type LeadFields = {
   form: string; // which form, e.g. "ads-landing hero"
   subject?: string;
   interestedIn?: string;
+  openingScheduleSft?: string; // sheet backup only
   company_website?: string; // honeypot: must stay empty
 };
 
