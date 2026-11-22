@@ -38,6 +38,8 @@ export function getRoutes(): string[] {
     "/doors-windows/architects",
     "/doors-windows/resources",
     "/doors-windows/consultation",
+    // Ads landing page: prerendered for speed, noindex so it stays out of the sitemap.
+    "/lp/doors-windows",
     "/map",
     "/map/about",
     "/map/products",
