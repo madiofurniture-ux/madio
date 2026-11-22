@@ -15,7 +15,8 @@ import {
 import { DW_BASE } from "../data/dwArchitect";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { breadcrumbJsonLd } from "../lib/seo";
-import { ConsultBand, DataTable, DWPageHero, SectionHeading } from "../components/dw/DWUI";
+import { ConsultBand, DataTable, DWPageHero, RenderGallery, SectionHeading } from "../components/dw/DWUI";
+import { DW_RENDER_NOTE, dwRenders } from "../data/dwRenders";
 
 const DASH = "—";
 
@@ -231,6 +232,10 @@ export const DWDesignMaterials: React.FC = () => {
             headers={["Configuration", "Application"]}
             rows={windowDoorTypologies.map((r) => [r.configuration, r.application])}
           />
+          <div className="mt-12">
+            <h3 className="text-lg font-serif font-light text-[#121212] mb-6">Opening types, visualised</h3>
+            <RenderGallery renders={dwRenders} note={DW_RENDER_NOTE} />
+          </div>
           <a
             href="/resources/madio-opening-types-49-options.pdf"
             download

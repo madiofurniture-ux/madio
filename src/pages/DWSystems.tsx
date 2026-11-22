@@ -7,7 +7,8 @@ import { DW_BASE, dwApplicationGroups, hasPublicPage } from "../data/dwArchitect
 import { usePageMeta } from "../hooks/usePageMeta";
 import { breadcrumbJsonLd, absoluteUrl } from "../lib/seo";
 import { responsiveImg } from "../lib/image";
-import { ConsultBand, DWPageHero, Hatch, SectionHeading } from "../components/dw/DWUI";
+import { ConsultBand, DWPageHero, Hatch, RenderGallery, SectionHeading } from "../components/dw/DWUI";
+import { DW_RENDER_NOTE, dwRenders } from "../data/dwRenders";
 
 const keySpecs = (id: DWCategoryId): string[] => {
   const s = getSystemById(id);
@@ -139,6 +140,28 @@ export const DWSystems: React.FC = () => {
           </div>
         </section>
       ))}
+
+      <section className="border-t border-[#EBE8E2] bg-[#121212] py-20 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <SectionHeading
+            dark
+            eyebrow="Opening Types"
+            title={
+              <>
+                How the systems <span className="italic text-[#C5A059]">come together.</span>
+              </>
+            }
+            intro="Sliding, slide & fold, casement, door and fixed configurations, visualised. Every opening is configured and sized to the project after site measurement."
+          />
+          <RenderGallery dark renders={dwRenders} note={DW_RENDER_NOTE} />
+          <Link
+            to={`${DW_BASE}/design-materials#configurations`}
+            className="mt-8 text-[10px] uppercase tracking-[0.2em] font-sans font-medium text-[#C5A059] inline-flex items-center gap-1.5"
+          >
+            All opening configurations <ArrowRight size={11} />
+          </Link>
+        </div>
+      </section>
 
       <section className="border-t border-[#EBE8E2] py-14 px-6 md:px-12">
         <div className="max-w-7xl mx-auto text-sm text-[#6B6B6B] font-light leading-relaxed max-w-3xl">

@@ -156,3 +156,27 @@ export const ConsultBand: React.FC<{ title?: React.ReactNode; body?: string; sys
     </div>
   </section>
 );
+
+/** Grid of opening-type renders, always captioned as renders. */
+export const RenderGallery: React.FC<{
+  renders: { src: string; title: string }[];
+  note: string;
+  dark?: boolean;
+}> = ({ renders, note, dark }) => (
+  <figure>
+    <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {renders.map((r) => (
+        <li key={r.src}>
+          <div className="relative aspect-[6/5] overflow-hidden bg-[#EBE8E2]">
+            <img src={r.src} alt={`Render: ${r.title}`} loading="lazy" width={396} height={328} className="w-full h-full object-cover" />
+            <span className="absolute top-2 left-2 text-[8px] uppercase tracking-[0.2em] font-sans bg-[#121212]/80 text-[#C5A059] px-1.5 py-0.5">
+              Render
+            </span>
+          </div>
+          <p className={`mt-2 text-[11px] font-light leading-snug ${dark ? "text-[#C4B9A8]" : "text-[#6B6B6B]"}`}>{r.title}</p>
+        </li>
+      ))}
+    </ul>
+    <figcaption className={`mt-5 text-[11px] font-light ${dark ? "text-[#C4B9A8]" : "text-[#6B6B6B]"}`}>{note}</figcaption>
+  </figure>
+);
