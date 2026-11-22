@@ -219,6 +219,11 @@ export const DoorsWindowsDetail: React.FC = () => {
                   ) : (
                     <p className="text-[9px] uppercase tracking-[0.25em] font-sans text-[#6B6B6B]">Photography coming soon</p>
                   )}
+                  {illustration?.kind === "render" && (
+                    <span className="absolute top-4 right-4 text-[9px] uppercase tracking-[0.25em] font-sans px-2.5 py-1 bg-[#121212]/80 text-[#C5A059]">
+                      Render
+                    </span>
+                  )}
                   {system.badge && (
                     <span className="absolute top-4 left-4 text-[9px] uppercase tracking-[0.25em] font-sans px-2.5 py-1 bg-[#121212] text-[#C5A059]">
                       {system.badge}
@@ -227,7 +232,9 @@ export const DoorsWindowsDetail: React.FC = () => {
                 </div>
                 {illustration && (
                   <figcaption className="mt-2 text-[10px] text-[#6B6B6B] font-light">
-                    Illustrative image from the Madio catalogue, not a Madio installation.
+                    {illustration.kind === "render"
+                      ? "Render for illustration, not a Madio installation."
+                      : "Illustrative image from the Madio catalogue, not a Madio installation."}
                   </figcaption>
                 )}
               </figure>

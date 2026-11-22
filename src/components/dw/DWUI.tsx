@@ -180,3 +180,26 @@ export const RenderGallery: React.FC<{
     <figcaption className={`mt-5 text-[11px] font-light ${dark ? "text-[#C4B9A8]" : "text-[#6B6B6B]"}`}>{note}</figcaption>
   </figure>
 );
+
+/** Large renders, uncropped, always captioned as renders. */
+export const RenderFeature: React.FC<{
+  renders: { src: string; title: string }[];
+  note: string;
+}> = ({ renders, note }) => (
+  <figure>
+    <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {renders.map((r) => (
+        <li key={r.src}>
+          <div className="relative aspect-[896/687] overflow-hidden bg-[#2A2A2A]">
+            <img src={r.src} alt={`Render: ${r.title}`} loading="lazy" width={896} height={687} className="w-full h-full object-cover" />
+            <span className="absolute top-3 left-3 text-[9px] uppercase tracking-[0.2em] font-sans bg-[#121212]/80 text-[#C5A059] px-2 py-1">
+              Render
+            </span>
+          </div>
+          <p className="mt-3 text-sm font-serif font-light text-white">{r.title}</p>
+        </li>
+      ))}
+    </ul>
+    <figcaption className="mt-6 text-[11px] font-light text-[#C4B9A8]">{note}</figcaption>
+  </figure>
+);

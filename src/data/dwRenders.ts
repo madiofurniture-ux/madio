@@ -46,3 +46,17 @@ export const dwRenders: DWRender[] = raw
   .filter((r): r is DWRender => !!r.src);
 
 export const DW_RENDER_NOTE = "Renders for illustration only, not Madio installations.";
+
+// Full-size renders of opening types that are not a system page of their own
+// (pivot and French doors are not in the 2026 catalogue). Gemini mark cropped
+// off; always shown with the render label.
+const large = import.meta.glob<string>("../assets/dw-renders/large/*.webp", { eager: true, import: "default" });
+const feature: [string, string][] = [
+  ["pivot-courtyard", "Pivot door opening onto a courtyard deck"],
+  ["pivot-entrance", "Pivot entrance door with side lights"],
+  ["french-door", "French door + top fanlight"],
+];
+
+export const dwFeatureRenders: DWRender[] = feature
+  .map(([id, title]) => ({ src: large[`../assets/dw-renders/large/${id}.webp`], title, group: "doors" as DWRenderGroup }))
+  .filter((r): r is DWRender => !!r.src);

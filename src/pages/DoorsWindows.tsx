@@ -12,6 +12,7 @@ import {
   dwMinInterlock,
   dwMaxHeight,
   dwAsset,
+  dwRenderAsset,
   DW_WARRANTY,
 } from "../data/doorsWindows";
 import type { DWCategoryMeta } from "../data/doorsWindows";
@@ -25,11 +26,13 @@ import {
   dwProjects,
   hasPublicPage,
 } from "../data/dwArchitect";
-import { ConsultBand, DataTable } from "../components/dw/DWUI";
+import { ConsultBand, DataTable, RenderFeature } from "../components/dw/DWUI";
+import { DW_RENDER_NOTE, dwFeatureRenders } from "../data/dwRenders";
 import { responsiveImg } from "../lib/image";
 
 const DW_ACCENT = "#C5A059";
 const dwLogo = dwAsset("dw-logo");
+const heroRender = dwRenderAsset("facade-villa");
 
 // Why MADIO D&W — reworded from the source catalogue PDF to remove
 // "manufacturer" framing and the blanket 15-Year Warranty claim.
@@ -158,6 +161,9 @@ export const DoorsWindows: React.FC = () => {
         ================================================================ */}
     <section className="relative min-h-[95vh] flex items-center justify-center bg-[#121212] overflow-hidden pt-32 pb-28">
       <div className="absolute inset-0 z-0">
+        {heroRender && (
+          <img src={heroRender} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        )}
         <div
           className="absolute inset-0 opacity-[0.12]"
           style={{
@@ -166,8 +172,13 @@ export const DoorsWindows: React.FC = () => {
             backgroundSize: "24px 24px",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#121212]/70 via-transparent to-[#121212]/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#121212]/80 via-[#121212]/30 to-[#121212]/60" />
       </div>
+      {heroRender && (
+        <span className="absolute bottom-4 right-4 z-10 text-[9px] uppercase tracking-[0.25em] font-sans text-white/50">
+          Render, not a Madio installation
+        </span>
+      )}
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 text-center text-white flex flex-col items-center">
         {dwLogo ? (
@@ -389,6 +400,27 @@ export const DoorsWindows: React.FC = () => {
         />
       </div>
     </section>
+
+    {/* ================================================================
+        PIVOT & FRENCH DOORS — client-supplied renders, not installations.
+        No system page: these opening types are not in the 2026 catalogue.
+        ================================================================ */}
+    {dwFeatureRenders.length > 0 && (
+      <section className="border-t border-[#EBE8E2] bg-[#121212] py-20 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <span className="text-[10px] tracking-[0.3em] uppercase font-sans font-medium block mb-4" style={{ color: DW_ACCENT }}>
+            Pivot &amp; French Doors
+          </span>
+          <h2 className="text-3xl md:text-5xl font-serif font-light text-white leading-tight mb-4">
+            Entrances, <span className="italic font-normal text-[#C5A059]">visualised.</span>
+          </h2>
+          <p className="text-sm text-[#C4B9A8] font-light leading-relaxed max-w-2xl mb-10">
+            Pivot and French door openings are among the 49 opening types. Ask us about sizes and glazing for your project.
+          </p>
+          <RenderFeature renders={dwFeatureRenders} note={DW_RENDER_NOTE} />
+        </div>
+      </section>
+    )}
 
     {/* ================================================================
         FOR ARCHITECTS — teaser into the dedicated page

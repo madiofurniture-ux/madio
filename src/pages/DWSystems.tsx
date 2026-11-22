@@ -165,7 +165,7 @@ export const DWSystems: React.FC = () => {
 
       <section className="border-t border-[#EBE8E2] py-14 px-6 md:px-12">
         <div className="max-w-7xl mx-auto text-sm text-[#6B6B6B] font-light leading-relaxed max-w-3xl">
-          Card images are illustrative visuals from the Madio catalogue, not Madio installations; see{" "}
+          Card images are renders or illustrative catalogue visuals, not Madio installations; see{" "}
           <Link to={`${DW_BASE}/projects`} className="text-[#121212] underline underline-offset-4 hover:text-[#C5A059]">
             projects
           </Link>{" "}

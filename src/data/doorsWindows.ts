@@ -104,6 +104,9 @@ export interface DWSpecRow {
 export interface DWVisual {
   src: string;
   alt: string;
+  // "render": client-supplied render (src/assets/dw-renders/large);
+  // "catalogue": imagery from the 2026 catalogue. Neither is a Madio installation.
+  kind: "render" | "catalogue";
 }
 
 export interface DWSystem {
@@ -190,9 +193,25 @@ export const dwFamilies: { id: DWFamily; title: string }[] = [
 ];
 
 const visuals = import.meta.glob<string>("../assets/dw2026/*.webp", { eager: true, import: "default" });
+const renders = import.meta.glob<string>("../assets/dw-renders/large/*.webp", { eager: true, import: "default" });
+// A client render for the system wins over the catalogue image.
 const visual = (id: string, alt: string): DWVisual | undefined => {
+  const render = renders[`../assets/dw-renders/large/${id}.webp`];
+  if (render) return { src: render, alt: `Render: ${dwRenderAlt[id] ?? alt}`, kind: "render" };
   const src = visuals[`../assets/dw2026/${id}.webp`];
-  return src ? { src, alt } : undefined;
+  return src ? { src, alt, kind: "catalogue" } : undefined;
+};
+export const dwRenderAsset = (name: string): string | undefined => renders[`../assets/dw-renders/large/${name}.webp`];
+
+const dwRenderAlt: Record<string, string> = {
+  monoslim: "slim sliding patio door opening a living room onto a garden deck",
+  "casement-52": "twin casement windows opened onto a garden",
+  slidefold: "corner slide and fold doors opening a kitchen onto a deck",
+  "zephyr-29": "sliding window above a kitchen sink",
+  phantom: "slim-framed corner glazing in a bedroom",
+  "vista-32": "large multi-panel sliding doors in a study",
+  "casement-40": "top-hung window in a bathroom",
+  "titan-40": "tall sliding doors to a high-rise balcony",
 };
 export const dwAsset = (name: string): string | undefined => visuals[`../assets/dw2026/${name}.webp`];
 
